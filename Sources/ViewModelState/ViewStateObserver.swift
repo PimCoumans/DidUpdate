@@ -1,4 +1,4 @@
-/// Opaque observer object, removing the observation logic when deallocated
+/// Opaque observer object, removing the its observer from the `StateChangeObserver` when deallocated
 public struct ViewStateObserver {
 	private var observer: AnyObject
 

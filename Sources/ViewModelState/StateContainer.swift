@@ -3,6 +3,7 @@ import Foundation
 /// Adds a change observer to your model class, allowing subscriptions to changes in values annotated with `@ViewState`.
 /// See the ``ViewModel`` property wrapper for more info.
 public protocol StateContainer: AnyObject {
+	/// Observer updated from `@ViewState` property wrappers
 	var changeObserver: StateChangeObserver { get }
 }
 

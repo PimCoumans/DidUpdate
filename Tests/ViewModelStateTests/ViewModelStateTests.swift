@@ -6,9 +6,14 @@ import ViewModelState
 final class ViewModelStateTests: XCTestCase {
 
 	class SomeViewModel: StateContainer {
-		@ViewState var frame: CGRect = .zero {
+		var frame: CGRect = .zero {
 			didSet {
 				print("ViewModel DidSet called: \(frame)")
+			}
+		}
+		@ViewState var toesje: String = "Lief" {
+			didSet {
+				print("MIAOW: \(toesje)")
 			}
 		}
 	}
@@ -19,8 +24,10 @@ final class ViewModelStateTests: XCTestCase {
 
 	class SomeSubview {
 		@ValueProxy var frame: CGRect
-		init(frame: ValueProxy<CGRect>) {
+		@ValueProxy var cat: String
+		init(frame: ValueProxy<CGRect>, cat: ValueProxy<String>) {
 			self._frame = frame
+			self._cat = cat
 		}
 	}
 
@@ -36,11 +43,12 @@ final class ViewModelStateTests: XCTestCase {
     func testExample() throws {
 
 		let view = SomeView()
-		let subview = SomeSubview(frame: view.$viewModel.frame)
+		let subview = SomeSubview(frame: view.$viewModel.frame, cat: view.$viewModel.toesje)
 		let furtherSubview = SomeFurtherSubview(size: subview.$frame.size)
 		view.$viewModel.frame.didChange { old, new, _ in
 			print("View frame handler called: \(old), \(new)")
 		}.add(to: &observers)
+		subview.cat = "ZO CUTE, OMG!"
 		subview.$frame.didChange { old, new, _ in
 			print("Subview frame handler called: \(old), \(new)")
 		}.add(to: &observers)
@@ -49,6 +57,13 @@ final class ViewModelStateTests: XCTestCase {
 		}.add(to: &observers)
 		furtherSubview.$size.didChange { old, new, _ in
 			print("Further size handler called: \(old), \(new)")
+		}.add(to: &observers)
+
+		view.$viewModel.toesje.didChange { oldValue, newValue, isInitial in
+			print("TOESJE: \(newValue)")
+		}.add(to: &observers)
+		view.viewModel.observableValues.frame.didChange { newValue in
+			print("value: \(newValue)")
 		}.add(to: &observers)
 
 		print(1)
@@ -82,6 +97,14 @@ final class ViewModelStateTests: XCTestCase {
 
 		print(8)
 		view.viewModel.frame.size = CGSize(width: 13, height: 777)
+		view.viewModel.frame = CGRect(x: 1, y: 2, width: 3, height: 4)
+
+		print(9)
+		view.viewModel.toesje = "MIAOW"
+
+		print(10)
+
+		observers.removeAll()
 
     }
 
@@ -91,6 +114,9 @@ final class ViewModelStateTests: XCTestCase {
 				print("FRAME CHANGED: \(frame)")
 			}
 		}
+		var toes: String = "Cute!" { didSet {
+			print("MIAOW")
+		}}
 	}
 
 	class SwiftUIView {
@@ -99,8 +125,10 @@ final class ViewModelStateTests: XCTestCase {
 
 	class OtherSwiftUIView {
 		@Binding var size: CGSize
-		init(size: Binding<CGSize>) {
+		@Binding var cat: String
+		init(cat: Binding<String>, size: Binding<CGSize>) {
 			_size = size
+			_cat = cat
 		}
 	}
 
@@ -111,7 +139,8 @@ final class ViewModelStateTests: XCTestCase {
 		view.viewModel.$frame.sink { frame in
 			print("Publisher: \(frame)")
 		}.store(in: &cancellables)
-		let otherView = OtherSwiftUIView(size: view.$viewModel.frame.size)
+		let otherView = OtherSwiftUIView(cat: view.$viewModel.toes, size: view.$viewModel.frame.size)
 		otherView.size.width = 20
+		otherView.cat = "zo cute!"
 	}
 }

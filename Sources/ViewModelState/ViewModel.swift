@@ -11,47 +11,56 @@
  ## Get updates:
  observer = $viewModel.your.value.didChange { [weak self] old, new in }
 
+ or:
+ var observers: [ViewStateObserver] = []
+ $viewModel.your.value.didChange { [weak self] new in /* ... */ }.add(to: &observers)
+
  */
 import Foundation
 
-/// Enables change observation logic through KeyPath subscripts.
-/// Use: `$viewModel.yourValue.didChange()` to subscribe to changes
+/// Creates `ValueProxy` structs to forward getting and setting of values and allow adding observers for specific keyPaths
+@dynamicMemberLookup
+public struct ObservableValues<Model: StateContainer> {
+	fileprivate var viewModel: Model
+	public init(viewModel: Model) {
+		self.viewModel = viewModel
+	}
+
+	public subscript<Value: Equatable>(
+		dynamicMember keyPath: ReferenceWritableKeyPath<Model, Value>
+	) -> ValueProxy<Value> {
+		ValueProxy(
+			get: { viewModel[keyPath: keyPath]},
+			set: { newValue in
+				viewModel[keyPath: keyPath] = newValue
+			},
+			addChangeHandler: { changeHandler in
+				viewModel.addObserver(keyPath: keyPath, handler: changeHandler)
+			}
+		)
+	}
+}
+
+public extension StateContainer {
+	var observableValues: ObservableValues<Self> {
+		ObservableValues(viewModel: self)
+	}
+}
+
+/// Enables change observation logic through `KeyPath` subscripts.
+/// Use `$viewModel.yourValue.didChange { ... }` to subscribe to changes
+/// or from within your viewModel: `self.observableValues.yourValues.didChange { ... }`
 @propertyWrapper
 public struct ViewModel<Model: StateContainer> {
 
-	@dynamicMemberLookup
-	public struct Wrapper {
-
-		fileprivate let viewModel: Model
-		fileprivate init(viewModel: Model) {
-			self.viewModel = viewModel
-		}
-
-		public subscript<Value: Equatable>(
-			dynamicMember keyPath: ReferenceWritableKeyPath<Model, Value>
-		) -> ValueProxy<Value> {
-			ValueProxy(
-				get: { viewModel[keyPath: keyPath]},
-				set: { viewModel[keyPath: keyPath] = $0},
-				addChangeHandler: { changeHandler in
-					let observer = viewModel.changeObserver.addObserver(keyPath: keyPath, handler: changeHandler)
-					if changeHandler.acceptsInitialValue {
-						observer.handleChange(.initial(value: viewModel[keyPath: keyPath]))
-					}
-					return ViewStateObserver(observer)
-				}
-			)
-		}
-	}
-
-	private let wrapper: Wrapper
+	private var observableValues: ObservableValues<Model>
 
 	public init(wrappedValue: Model) {
-		wrapper = Wrapper(viewModel: wrappedValue)
+		observableValues = ObservableValues(viewModel: wrappedValue)
 	}
 
-	public var wrappedValue: Model { wrapper.viewModel }
-	public var projectedValue: Wrapper { wrapper }
+	public var wrappedValue: Model { observableValues.viewModel }
+	public var projectedValue: ObservableValues<Model> { observableValues }
 }
 
 @propertyWrapper
@@ -63,17 +72,17 @@ public struct ViewState<Value: Equatable> {
 	}
 
 	public static subscript<Model: StateContainer>(
-		_enclosingInstance instance: Model,
+		_enclosingInstance viewModel: Model,
 		wrapped wrappedKeyPath: ReferenceWritableKeyPath<Model, Value>,
 		storage storageKeyPath: ReferenceWritableKeyPath<Model, Self>
 	) -> Value {
 		get {
-			return instance[keyPath: storageKeyPath].storage
+			return viewModel[keyPath: storageKeyPath].storage
 		}
 		set {
-			let oldValue = instance[keyPath: storageKeyPath].storage
-			instance[keyPath: storageKeyPath].storage = newValue
-			instance.changeObserver.didUpdate(instance, keyPath: wrappedKeyPath, from: oldValue, to: newValue)
+			let oldValue = viewModel[keyPath: storageKeyPath].storage
+			viewModel[keyPath: storageKeyPath].storage = newValue
+			viewModel.notifyChange(at: wrappedKeyPath, from: oldValue, to: newValue)
 		}
 	}
 
