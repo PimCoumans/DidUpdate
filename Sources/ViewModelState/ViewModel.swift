@@ -62,33 +62,3 @@ public struct ViewModel<Model: StateContainer> {
 	public var wrappedValue: Model { observableValues.viewModel }
 	public var projectedValue: ObservableValues<Model> { observableValues }
 }
-
-@propertyWrapper
-public struct ViewState<Value: Equatable> {
-
-	private var storage: Value
-	public init(wrappedValue: Value) {
-		self.storage = wrappedValue
-	}
-
-	public static subscript<Model: StateContainer>(
-		_enclosingInstance viewModel: Model,
-		wrapped wrappedKeyPath: ReferenceWritableKeyPath<Model, Value>,
-		storage storageKeyPath: ReferenceWritableKeyPath<Model, Self>
-	) -> Value {
-		get {
-			return viewModel[keyPath: storageKeyPath].storage
-		}
-		set {
-			let oldValue = viewModel[keyPath: storageKeyPath].storage
-			viewModel[keyPath: storageKeyPath].storage = newValue
-			viewModel.notifyChange(at: wrappedKeyPath, from: oldValue, to: newValue)
-		}
-	}
-
-	@available(*, unavailable, message: "This property wrapper can only be applied to a StateContainer")
-	public var wrappedValue: Value {
-		get { fatalError() }
-		set { fatalError() }
-	}
-}

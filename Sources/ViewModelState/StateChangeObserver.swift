@@ -4,6 +4,27 @@ import Foundation
 public class StateChangeObserver {
 
 	private var observers: [WeakObserver] = []
+	private var receivedPing: Bool = false
+	
+	private var validatedObservedValues: Set<AnyKeyPath> = []
+
+	/// Signals a property getter was intercepted by a ``ViewState`` property wrapper
+	internal func ping() {
+		receivedPing = false
+	}
+	/// Logs a warning when getter of property at given keyPath isn‘t wrapper by ``ViewState``, so change handler would never be called
+	fileprivate func expectPing(for keyPath: AnyKeyPath, from getter: () -> Void) {
+		guard !validatedObservedValues.contains(keyPath) else {
+			return
+		}
+		receivedPing = false
+		getter()
+		if !receivedPing {
+			print("Warning: change handlers for property \(keyPath) won‘t be called as it doesn‘t have a @ViewState property wrapper!")
+		} else {
+			validatedObservedValues.insert(keyPath)
+		}
+	}
 }
 
 // Forwarding calls to StateChangeObserver
@@ -23,6 +44,9 @@ internal extension StateContainer {
 		keyPath: WritableKeyPath<Self, Value>,
 		handler: ChangeHandler<Value>
 	) -> ViewStateObserver {
+		changeObserver.expectPing(for: keyPath) {
+			_ = self[keyPath: keyPath]
+		}
 		let observer = changeObserver.addObserver(keyPath: keyPath, handler: handler)
 		if handler.acceptsInitialValue {
 			observer.handleChange(.initial(value: self[keyPath: keyPath]))
@@ -92,10 +116,9 @@ internal extension StateChangeObserver {
 			guard let change = change as? StateChange<Value> else {
 				preconditionFailure("Updated called with wrong type: \(change)")
 			}
-			changeHandler.handler(change)
-//			if change.hasChanged && changeHandler.shouldHandleChange(change) {
-//				changeHandler.handler(change)
-//			}
+			if change.hasChanged && changeHandler.shouldHandleChange(change) {
+				changeHandler.handler(change)
+			}
 		}
 	}
 

@@ -2,8 +2,9 @@
 /// and provides the functionality to subscribe to value changes through the `didChange` method.
 @propertyWrapper @dynamicMemberLookup
 public struct ValueProxy<Value: Equatable> {
-	/// Documentation for a typealias
+	/// Closure accepting all available arguments for changes: the previous value, the new value and wether the handler was called with just the current value
 	public typealias DidChangeHandler = (_ oldValue: Value, _ newValue: Value, _ isInitial: Bool) -> Void
+	/// Closure providing just the new value of the change as it's only argument
 	public typealias SingleValueDidChangeHandler = (_ newValue: Value) -> Void
 
 	let get: () -> Value
@@ -15,7 +16,7 @@ public struct ValueProxy<Value: Equatable> {
 		nonmutating set { set(newValue) }
 	}
 
-	/// Use the `$` syntax to access the `ValueProxy` itself and add change handler or pass on to other views, with optionally a keyPath
+	/// Use the `$` syntax to access the `ValueProxy` itself to add change handlers or pass it on to other views, optionally appending any sub values through dynamic member lookup
 	public var projectedValue: Self { self }
 
 	public subscript<Subject>(
@@ -95,7 +96,7 @@ public extension ValueProxy {
 }
 
 extension StateChange {
-	/// Converts state change values to value at provided keyPath
+	/// Converts the change's values to the value at provided keyPath
 	@inlinable
 	func converted<Subject: Equatable>(with keyPath: KeyPath<Value, Subject>) -> StateChange<Subject> {
 		switch self {
