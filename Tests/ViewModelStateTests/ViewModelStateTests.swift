@@ -6,7 +6,7 @@ import ViewModelState
 final class ViewModelStateTests: XCTestCase {
 
 	class SomeViewModel: StateContainer {
-		var frame: CGRect = .zero {
+		@ViewState var frame: CGRect = .zero {
 			didSet {
 				print("ViewModel DidSet called: \(frame)")
 			}
