@@ -10,7 +10,7 @@ public class StateChangeObserver {
 
 	/// Signals a property getter was intercepted by a ``ViewState`` property wrapper
 	internal func ping() {
-		receivedPing = false
+		receivedPing = true
 	}
 	/// Logs a warning when getter of property at given keyPath isn‘t wrapper by ``ViewState``, so change handler would never be called
 	fileprivate func expectPing(for keyPath: AnyKeyPath, from getter: () -> Void) {
