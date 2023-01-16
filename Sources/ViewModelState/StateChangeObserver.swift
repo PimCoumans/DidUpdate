@@ -65,10 +65,13 @@ internal enum StateChange<Value> {
 
 /// Instructions on how to handle a state change
 internal struct ChangeHandler<Value> {
-	let compareEquality: Bool = false
-	let shouldHandleChange: (_ change: StateChange<Value>) -> Bool
+	let shouldHandleChange: ((_ change: StateChange<Value>) -> Bool)?
 	let acceptsInitialValue: Bool
 	let handler: (_ change: StateChange<Value>) -> Void
+
+	func handles(_ change: StateChange<Value>) -> Bool {
+		shouldHandleChange?(change) ?? true
+	}
 }
 
 /// Any observer capable of handling a state change
@@ -124,7 +127,7 @@ internal extension StateChangeObserver {
 			guard let change = change as? StateChange<Value> else {
 				preconditionFailure("Updated called with wrong type: \(change)")
 			}
-			if changeHandler.shouldHandleChange(change) {
+			if changeHandler.handles(change) {
 				changeHandler.handler(change)
 			}
 		}

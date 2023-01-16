@@ -57,6 +57,43 @@ public extension ValueProxy {
 		))
 	}
 }
+
+public extension ValueProxy where Value: Equatable {
+	/// Adds a change handler called whenever the observed value changes
+	/// - Parameters:
+	///   - provideLatestValue: Wether the provided closure should be called immediately with the current value
+	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
+	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
+	func didChange(
+		withLatest provideLatestValue: Bool = false,
+		compareEqual: Bool,
+		_ handler: @escaping DidChangeHandler
+	) -> ViewStateObserver {
+		addChangeHandler(.init(
+			compareEquality: compareEqual,
+			acceptsInitialValue: provideLatestValue,
+			handler: handler
+		))
+	}
+
+	/// Adds a change handler called whenever the observed value changes
+	/// - Parameters:
+	///   - provideLatestValue: Wether the provided closure should be called immediately with the current value
+	///   - handler: Closure executed containing just the new value
+	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
+	func didChange(
+		withLatest provideLatestValue: Bool = false,
+		compareEqual: Bool,
+		_ handler: @escaping SingleValueDidChangeHandler
+	) -> ViewStateObserver {
+		addChangeHandler(.init(
+			compareEquality: compareEqual,
+			acceptsInitialValue: provideLatestValue,
+			handler: { _, new, _ in handler(new) }
+		))
+	}
+}
+
 public extension ValueProxy {
 	/// Adds a change handler called whenever the observed value changes at the provided keyPath
 	/// - Parameters:
@@ -64,13 +101,13 @@ public extension ValueProxy {
 	///   - provideLatestValue: Wether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
-	func didChange<Subject>(
+	func didChange<Subject: Equatable>(
 		comparing keyPath: KeyPath<Value, Subject>,
 		withLatest provideLatestValue: Bool = false,
 		_ handler: @escaping DidChangeHandler
 	) -> ViewStateObserver {
 		addChangeHandler(.init(
-			shouldHandleChange: { $0.converted(with: keyPath).hasChangedValueIfEquatable },
+			shouldHandleChange: { $0.converted(with: keyPath).hasChangedValue },
 			acceptsInitialValue: provideLatestValue,
 			handler: handler
 		))
@@ -82,13 +119,13 @@ public extension ValueProxy {
 	///   - provideLatestValue: Wether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing just the new value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
-	func didChange<Subject>(
+	func didChange<Subject: Equatable>(
 		comparing keyPath: KeyPath<Value, Subject>,
 		withLatest provideLatestValue: Bool = false,
 		_ handler: @escaping SingleValueDidChangeHandler
 	) -> ViewStateObserver {
 		addChangeHandler(.init(
-			shouldHandleChange: { $0.converted(with: keyPath).hasChangedValueIfEquatable },
+			shouldHandleChange: { $0.converted(with: keyPath).hasChangedValue },
 			acceptsInitialValue: provideLatestValue,
 			handler: { _, new, _ in handler(new)}
 		))
@@ -108,22 +145,32 @@ extension StateChange {
 	}
 }
 
-extension Equatable {
-	func equals(_ other: Any) -> Bool {
-		other as? Self == self
+extension StateChange where Value: Equatable {
+	@inlinable var hasChangedValue: Bool {
+		switch self {
+		case .initial: return true
+		case .changed(let old, let new): return old != new
+		}
 	}
 }
 
-extension StateChange {
-	/// Wether the values of the StateChange are different when `Value` conforms to `Equatable`
-	/// - Note: `.initial` is always regarded as having a changed value
-	@inlinable
-	var hasChangedValueIfEquatable: Bool {
-		switch self {
-		case .initial: return true
-		case .changed(let old as any Equatable, let new as any Equatable):
-			return !old.equals(new)
-		case .changed: return true
+extension ChangeHandler where Value: Equatable {
+
+	/// Convenience initializer converting a ``StateChange`` to a ``ValueProxy/DidChangeHandler```
+	init(
+		compareEquality: Bool,
+		acceptsInitialValue: Bool = false,
+		handler : @escaping ValueProxy<Value>.DidChangeHandler
+	) {
+		self.shouldHandleChange = { $0.hasChangedValue }
+		self.acceptsInitialValue = acceptsInitialValue
+		self.handler = { change in
+			switch change {
+			case .initial(let value):
+				handler(value, value, true)
+			case .changed(let old, let new):
+				handler(old, new, false)
+			}
 		}
 	}
 }
@@ -136,7 +183,7 @@ extension ChangeHandler {
 		acceptsInitialValue: Bool = false,
 		handler : @escaping ValueProxy<Value>.DidChangeHandler
 	) {
-		self.shouldHandleChange = shouldHandleChange ?? { _ in true }
+		self.shouldHandleChange = shouldHandleChange
 		self.acceptsInitialValue = acceptsInitialValue
 		self.handler = { change in
 			switch change {
@@ -152,8 +199,10 @@ extension ChangeHandler {
 	@inlinable
 	func passThrough<RootValue>(from keyPath: WritableKeyPath<RootValue, Value>) -> ChangeHandler<RootValue> {
 		.init(
-			shouldHandleChange: { change in
-				shouldHandleChange(change.converted(with: keyPath))
+			shouldHandleChange: shouldHandleChange.map { handler in
+				{ change in
+					handler(change.converted(with: keyPath))
+				}
 			},
 			acceptsInitialValue: acceptsInitialValue,
 			handler: { change in
