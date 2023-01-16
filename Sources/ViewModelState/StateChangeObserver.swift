@@ -13,16 +13,17 @@ public class StateChangeObserver {
 		receivedPing = true
 	}
 	/// Logs a warning when getter of property at given keyPath isn‘t wrapper by ``ViewState``, so change handler would never be called
-	fileprivate func expectPing(for keyPath: AnyKeyPath, from getter: () -> Void) {
+	/// Does not attempt to cast result to Value, but also accepts when result is a `ViewState` itself
+	fileprivate func validateGetter<Value>(for keyPath: AnyKeyPath, expecting: Value.Type, getter: () -> Any) {
 		guard !validatedObservedValues.contains(keyPath) else {
 			return
 		}
 		receivedPing = false
-		getter()
-		if !receivedPing {
-			print("Warning: change handlers for property \(keyPath) won‘t be called as it doesn‘t have a @ViewState property wrapper!")
-		} else {
+		let result = getter()
+		if receivedPing || result is ViewState<Value> {
 			validatedObservedValues.insert(keyPath)
+		} else {
+			print("Warning: change handlers for property \(type(of: keyPath)) won‘t be called as it doesn‘t have a @ViewState property wrapper!")
 		}
 	}
 }
@@ -31,7 +32,7 @@ public class StateChangeObserver {
 internal extension StateContainer {
 	/// Calls all observers for the given keyPath with new and old value
 	func notifyChange<Value>(
-		at keyPath: ReferenceWritableKeyPath<Self, Value>,
+		at keyPath: PartialKeyPath<Self>,
 		from oldValue: Value,
 		to newValue: Value
 	) {
@@ -40,14 +41,14 @@ internal extension StateContainer {
 
 	/// Creates an observer for the value at the given keyPath
 	func addObserver<Value>(
-		keyPath: ReferenceWritableKeyPath<Self, Value>,
+		keyPath: PartialKeyPath<Self>,
 		handler: ChangeHandler<Value>
 	) -> ViewStateObserver {
-		changeObserver.expectPing(for: keyPath) {
-			_ = self[keyPath: keyPath]
+		changeObserver.validateGetter(for: keyPath, expecting: Value.self) {
+			self[keyPath: keyPath]
 		}
 		let observer = changeObserver.addObserver(keyPath: keyPath, handler: handler)
-		if handler.acceptsInitialValue {
+		if handler.updateWithCurrentValue {
 			observer.handleChange(.initial(value: self[keyPath: keyPath]))
 		}
 		return ViewStateObserver(observer)
@@ -69,8 +70,8 @@ internal protocol StateObserver {
 
 internal extension StateChangeObserver {
 
-	fileprivate func handleChange<Container: StateContainer, Value>(
-		keyPath: ReferenceWritableKeyPath<Container, Value>,
+	fileprivate func handleChange<Value>(
+		keyPath: AnyKeyPath,
 		from oldValue: Value,
 		to newValue: Value
 	) {
@@ -79,8 +80,8 @@ internal extension StateChangeObserver {
 		}
 	}
 
-	fileprivate func addObserver<Container: StateContainer, Value>(
-		keyPath: ReferenceWritableKeyPath<Container, Value>,
+	fileprivate func addObserver<Value>(
+		keyPath: AnyKeyPath,
 		handler: ChangeHandler<Value>
 	) -> Observer<Value> {
 		let observer = Observer(keyPath: keyPath, handler: handler)

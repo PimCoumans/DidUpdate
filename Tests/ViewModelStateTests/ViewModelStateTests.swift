@@ -6,9 +6,12 @@ import ViewModelState
 final class ViewModelStateTests: XCTestCase {
 
 	class SomeViewModel: StateContainer {
+		var calledFrameSetter: Bool = false
+		var calledFrameDidChange: Bool = false
+
 		@ViewState var frame: CGRect = .zero {
 			didSet {
-				print("[ViewModel/Frame] DidSet: \(frame)")
+				calledFrameSetter = true
 			}
 		}
 		@ViewState var array: [Int] = [0] {
@@ -21,6 +24,13 @@ final class ViewModelStateTests: XCTestCase {
 			didSet {
 				print("[ViewModel/someString] DidSet")
 			}
+		}
+
+		var observers: [ViewStateObserver] = []
+		init() {
+			$frame.didChange { [unowned self] newValue in
+				self.calledFrameDidChange = true
+			}.add(to: &observers)
 		}
 	}
 
@@ -76,6 +86,23 @@ final class ViewModelStateTests: XCTestCase {
 		view.viewModel.frame.size = CGSize(width: 5, height: 6)
 
 		furtherView.size = CGSize(width: 7, height: 8)
+	}
+
+	func testViewStateObserver() {
+		let view = SomeView()
+		let subview = SomeSubview(frame: view.$viewModel.frame, cat: view.$viewModel.someString)
+		let furtherView = SomeFurtherSubview(size: subview.$frame.size)
+
+		view.$viewModel.frame.didChange { newValue in
+			print("[ViewModel/Frame] DidChange: \(newValue)")
+		}.add(to: &observers)
+		view.viewModel.$frame.didChange { newValue in
+			print("[ViewModel/$Frame] DidChange: \(newValue)")
+		}.add(to: &observers)
+		view.viewModel.$frame.size.didChange { newValue in
+			print("[ViewModel/$Frame.size] DidChange: \(newValue)")
+		}.add(to: &observers)
+		view.viewModel.frame = CGRect(x: 1, y: 2, width: 3, height: 4)
 	}
 
 	class SomeObject: ObservableObject {
