@@ -1,9 +1,9 @@
-/// Opaque observer object, removing the its observer from the `StateChangeObserver` when deallocated
+/// Opaque observer object, removing the its observer from the `StateContainerObserver` when deallocated
 public struct ViewStateObserver {
 	private var observer: AnyObject
 
 	internal init<Value>(
-		_ observer: StateChangeObserver.Observer<Value>
+		_ observer: StateContainerObserver.Observer<Value>
 	) {
 		self.observer = observer
 	}

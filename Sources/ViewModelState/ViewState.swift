@@ -25,7 +25,7 @@ public struct ViewState<Value> {
 		}
 	}
 
-	/// Updates  the enclosing ``StateContainer``'s ``StateChangeObserver`` whenever the value is changed
+	/// Updates  the enclosing ``StateContainer``'s ``StateContainerObserver`` whenever the value is changed
 	public static subscript<EnclosingSelf: StateContainer>(
 		_enclosingInstance instance: EnclosingSelf,
 		wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Value>,

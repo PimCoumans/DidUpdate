@@ -1,19 +1,20 @@
 import Foundation
 
 /// Observer attached to any class conforming to ``StateContainer``, used together with the ``ViewModel`` property wrapper observer to be added for any values.
-public class StateChangeObserver {
+public class StateContainerObserver {
 
 	private var observers: [WeakObserver] = []
+
 	private var receivedPing: Bool = false
-	
 	private var validatedObservedValues: Set<AnyKeyPath> = []
 
 	/// Signals a property getter was intercepted by a ``ViewState`` property wrapper
 	internal func ping() {
 		receivedPing = true
 	}
-	/// Logs a warning when getter of property at given keyPath isn‘t wrapper by ``ViewState``, so change handler would never be called
-	/// Does not attempt to cast result to Value, but also accepts when result is a `ViewState` itself
+
+	/// Logs a warning when getter of property at given keyPath isn‘t wrapped by ``ViewState``, so change handler would never be called
+	/// Does not attempt to cast result to `Value`, instead also accepts when result is a `ViewState` itself
 	fileprivate func validateGetter<Value>(for keyPath: AnyKeyPath, expecting: Value.Type, getter: () -> Any) {
 		guard !validatedObservedValues.contains(keyPath) else {
 			return
@@ -68,7 +69,7 @@ internal protocol StateObserver {
 	func handleChange<Value>(_ change: StateChange<Value>)
 }
 
-internal extension StateChangeObserver {
+internal extension StateContainerObserver {
 
 	fileprivate func handleChange<Value>(
 		keyPath: AnyKeyPath,

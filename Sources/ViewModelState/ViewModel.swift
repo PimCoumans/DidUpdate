@@ -5,18 +5,25 @@
 /// `ViewStateObserver` ->  AnyCancellable
 
 /*
- ## Create binding:
- $viewModel.your.value
+ ## Value Proxies
+ Pass through a `ValueProxy` to any other view (which will be able to use `@ValueProxy`) through the `@ViewModel`'s
+ projected value:
+ ```$viewModel.your.value```
 
  ## Get updates:
+ Value updates are available through both the `ValueProxy` but also directly on `ViewState`
+ ```
  observer = $viewModel.your.value.didChange { [weak self] old, new in }
+ observer = viewModel.$your.value.didChange { [weak self] old, new in }
+ ```
 
- or:
+ And the returned observer can be stored in an array with the `add(to:)` method
+ ```
  var observers: [ViewStateObserver] = []
  $viewModel.your.value.didChange { [weak self] new in /* ... */ }.add(to: &observers)
+ ```
 
  */
-
 
 /// Enables change observation logic through `KeyPath` subscripts.
 /// Use `$viewModel.yourValue.didChange { ... }` to subscribe to changes

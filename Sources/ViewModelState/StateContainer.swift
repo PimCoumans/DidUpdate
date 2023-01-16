@@ -4,15 +4,15 @@ import Foundation
 /// See the ``ViewModel`` property wrapper for more info.
 public protocol StateContainer: AnyObject {
 	/// Observer updated from `@ViewState` property wrappers
-	var changeObserver: StateChangeObserver { get }
+	var changeObserver: StateContainerObserver { get }
 }
 
 private var changeObserverKey = "updateHandler"
 public extension StateContainer {
-	private func newHandler() -> StateChangeObserver { .init() }
+	private func newHandler() -> StateContainerObserver { .init() }
 
-	var changeObserver: StateChangeObserver {
-		if let handler = objc_getAssociatedObject(self, &changeObserverKey) as? StateChangeObserver {
+	var changeObserver: StateContainerObserver {
+		if let handler = objc_getAssociatedObject(self, &changeObserverKey) as? StateContainerObserver {
 			return handler
 		}
 		let handler = newHandler()
