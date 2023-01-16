@@ -61,32 +61,32 @@ public protocol ChangeObservable {
 }
 
 public extension ChangeObservable {
-	/// Closure accepting all available arguments for changes: the previous value, the new value and wether the handler was called with just the current value
-	typealias DidChangeHandler = (_ oldValue: Value, _ newValue: Value, _ isInitial: Bool) -> Void
 	/// Closure providing just the new value of the change as it's only argument
-	typealias NewDidChangeHandler = (_ newValue: Value) -> Void
-
-	/// Adds a change handler called whenever the observed value changes
-	/// - Parameters:
-	///   - provideLatestValue: Wether the provided closure should be called immediately with the current value
-	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
-	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
-	func didChange(withCurrent provideCurrent: Bool = false, handler: @escaping DidChangeHandler) -> Observer {
-		addChangeHandler(.init(
-			updateWithCurrent: provideCurrent,
-			handler: handler
-		))
-	}
+	typealias DidChangeHandler = (_ newValue: Value) -> Void
+	/// Closure accepting all available arguments for changes: the previous value, the new value and wether the handler was called with just the current value
+	typealias FullDidChangeHandler = (_ oldValue: Value, _ newValue: Value, _ isInitial: Bool) -> Void
 
 	/// Adds a change handler called whenever the observed value changes
 	/// - Parameters:
 	///   - provideLatestValue: Wether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing just the new value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
-	func didChange(withCurrent provideCurrent: Bool = false, handler: @escaping NewDidChangeHandler) -> Observer {
+	func didChange(withCurrent provideCurrent: Bool = false, handler: @escaping DidChangeHandler) -> Observer {
 		addChangeHandler(.init(
 			updateWithCurrent: provideCurrent,
 			handler: { _, new, _ in handler(new) }
+		))
+	}
+
+	/// Adds a change handler called whenever the observed value changes
+	/// - Parameters:
+	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
+	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
+	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
+	func didChange(withCurrent provideCurrent: Bool = false, handler: @escaping FullDidChangeHandler) -> Observer {
+		addChangeHandler(.init(
+			updateWithCurrent: provideCurrent,
+			handler: handler
 		))
 	}
 }
@@ -94,8 +94,8 @@ public extension ChangeObservable {
 public extension ChangeObservable where Value: Equatable {
 	/// Adds a change handler called whenever the observed value changes
 	/// - Parameters:
-	///   - provideLatestValue: Wether the provided closure should be called immediately with the current value
-	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
+	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
+	///   - handler: Closure executed containing just the new value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
 	func didChange(
 		withCurrent provideCurrent: Bool = false,
@@ -105,24 +105,24 @@ public extension ChangeObservable where Value: Equatable {
 		addChangeHandler(.init(
 			compareEquality: compareEqual,
 			updateWithCurrent: provideCurrent,
-			handler: handler
+			handler: { _, new, _ in handler(new) }
 		))
 	}
 
 	/// Adds a change handler called whenever the observed value changes
 	/// - Parameters:
-	///   - provideLatestValue: Wether the provided closure should be called immediately with the current value
-	///   - handler: Closure executed containing just the new value
+	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
+	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
 	func didChange(
 		withCurrent provideCurrent: Bool = false,
 		compareEqual: Bool = true,
-		handler: @escaping NewDidChangeHandler
+		handler: @escaping FullDidChangeHandler
 	) -> Observer {
 		addChangeHandler(.init(
 			compareEquality: compareEqual,
 			updateWithCurrent: provideCurrent,
-			handler: { _, new, _ in handler(new) }
+			handler: handler
 		))
 	}
 }
@@ -179,12 +179,52 @@ extension StateChange where Value: ExpressibleByNilLiteral {
 	}
 }
 
+public extension ChangeObservable where Value: ExpressibleByNilLiteral {
+	/// Adds a change handler called whenever the observed value changes at the provided keyPath, with keyPath pointing to unwrapped value
+	/// so it does not need to be composed with a preceding `.?.`
+	/// - Parameters:
+	///   - keyPath: KeyPath to value to compare, making sure the change handler is only executed when value changed
+	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
+	///   - handler: Closure executed containing just the new value
+	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
+	func didChange<Wrapped, Subject: Equatable>(
+		comparing keyPath: KeyPath<Wrapped, Subject>,
+		withCurrent provideCurrent: Bool = false,
+		_ handler: @escaping DidChangeHandler
+	) -> ViewStateObserver where Value == Optional<Wrapped> {
+		addChangeHandler(.init(
+			shouldHandleChange: { $0.converted(with: keyPath).hasChangedValue },
+			updateWithCurrent: provideCurrent,
+			handler: { _, new, _ in handler(new) }
+		))
+	}
+
+	/// Adds a change handler called whenever the observed value changes at the provided keyPath, with keyPath pointing to unwrapped value
+	/// so it does not need to be composed with a preceding `.?.`
+	/// - Parameters:
+	///   - keyPath: KeyPath to value to compare, making sure the change handler is only executed when value changed
+	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
+	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
+	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
+	func didChange<Wrapped, Subject: Equatable>(
+		comparing keyPath: KeyPath<Wrapped, Subject>,
+		withCurrent provideCurrent: Bool = false,
+		_ handler: @escaping FullDidChangeHandler
+	) -> ViewStateObserver where Value == Optional<Wrapped> {
+		addChangeHandler(.init(
+			shouldHandleChange: { $0.converted(with: keyPath).hasChangedValue },
+			updateWithCurrent: provideCurrent,
+			handler: handler
+		))
+	}
+}
+
 public extension ChangeObservable {
 	/// Adds a change handler called whenever the observed value changes at the provided keyPath
 	/// - Parameters:
 	///   - keyPath: KeyPath to value to compare, making sure the change handler is only executed when value changed
-	///   - provideLatestValue: Wether the provided closure should be called immediately with the current value
-	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
+	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
+	///   - handler: Closure executed containing just the new value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
 	func didChange<Subject: Equatable>(
 		comparing keyPath: KeyPath<Value, Subject>,
@@ -194,25 +234,25 @@ public extension ChangeObservable {
 		addChangeHandler(.init(
 			shouldHandleChange: { $0.converted(with: keyPath).hasChangedValue },
 			updateWithCurrent: provideCurrent,
-			handler: handler
+			handler: { _, new, _ in handler(new)}
 		))
 	}
 
 	/// Adds a change handler called whenever the observed value changes at the provided keyPath
 	/// - Parameters:
 	///   - keyPath: KeyPath to value to compare, making sure the change handler is only executed when value changed
-	///   - provideLatestValue: Wether the provided closure should be called immediately with the current value
-	///   - handler: Closure executed containing just the new value
+	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
+	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
 	func didChange<Subject: Equatable>(
 		comparing keyPath: KeyPath<Value, Subject>,
 		withCurrent provideCurrent: Bool = false,
-		_ handler: @escaping NewDidChangeHandler
+		_ handler: @escaping FullDidChangeHandler
 	) -> ViewStateObserver {
 		addChangeHandler(.init(
 			shouldHandleChange: { $0.converted(with: keyPath).hasChangedValue },
 			updateWithCurrent: provideCurrent,
-			handler: { _, new, _ in handler(new)}
+			handler: handler
 		))
 	}
 }
