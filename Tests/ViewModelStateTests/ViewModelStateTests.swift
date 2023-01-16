@@ -6,31 +6,63 @@ import ViewModelState
 final class ViewModelStateTests: XCTestCase {
 
 	class SomeViewModel: StateContainer {
-		var calledFrameSetter: Bool = false
-		var calledFrameDidChange: Bool = false
 
-		@ViewState var frame: CGRect = .zero {
-			didSet {
-				calledFrameSetter = true
-			}
-		}
-		@ViewState var array: [Int] = [0] {
-			didSet {
-				print("[ViewModel/Array] Updated: \(array)")
+		struct ViewModelProperty {
+			var string: String = "SomeString"
+			var optional: Int? = nil
+
+			var computed: String {
+				string.appending(String(describing: optional))
 			}
 		}
 
-		var someString: String = "Nothing" {
-			didSet {
-				print("[ViewModel/someString] DidSet")
-			}
-		}
+		var calledFrameDidSet: Bool = false
+		var calledFrameChangeHandler: Bool = false
+		@ViewState var frame: CGRect = .zero { didSet {
+			calledFrameDidSet = true
+		}}
+
+		var calledArrayDidSet: Bool = false
+		var calledArrayChangeHandler: Bool = false
+		@ViewState var array: [Int] = [0] { didSet {
+			calledArrayDidSet = true
+		}}
+
+		var calledOptionalDidSet: Bool = false
+		var calledOptionalDidChangeHandler: Bool = false
+		var calledOptionalComparingDidChangeHandler: Bool = false
+		@ViewState var optional: CGRect? { didSet {
+			calledOptionalDidSet = true
+		}}
+
+		var calledStructDidSet: Bool = false
+		var calledStructDidChangeHandler: Bool = false
+		var calledStructComputedDidChangeHandler: Bool = false
+		@ViewState var structProperty = ViewModelProperty() { didSet {
+			calledStructDidSet = true
+		}}
 
 		var observers: [ViewStateObserver] = []
 		init() {
-			$frame.didChange { [unowned self] newValue in
-				self.calledFrameDidChange = true
-			}.add(to: &observers)
+			observers.add {
+				$frame.size.width.description.count.didChange { [unowned self] newValue in
+					self.calledArrayChangeHandler = true
+				}
+				$optional.didChange { [unowned self] newValue in
+					self.calledOptionalDidChangeHandler = true
+				}
+				$optional.didChange(comparing: \.width) { [unowned self] newValue in
+					self.calledOptionalComparingDidChangeHandler = true
+				}
+
+				$structProperty.didChange { [unowned self] newValue in
+					self.calledStructDidSet = true
+				}
+				$structProperty.computed.didChange { [unowned self] newValue in
+					self.calledStructComputedDidChangeHandler = true
+				}
+			}
+
 		}
 	}
 
@@ -56,53 +88,15 @@ final class ViewModelStateTests: XCTestCase {
 
 	var observers: [ViewStateObserver] = []
 
-	func testStuff() {
+	func testOptionalObserving() {
 		let view = SomeView()
-		let subview = SomeSubview(frame: view.$viewModel.frame, cat: view.$viewModel.someString)
-		let furtherView = SomeFurtherSubview(size: subview.$frame.size)
-
-		view.$viewModel.frame.didChange(compareEqual: false) { newValue in
-			print("[View/Frame] Updated: \(newValue)")
+		view.viewModel.$optional.didChange(comparing: \.width) { newValue in
+			print("Width changed: \(String(describing: newValue?.width))")
 		}.add(to: &observers)
-		view.$viewModel.frame.didChange { newValue in
-			print("[View/Frame] Changed: \(newValue)")
-		}.add(to: &observers)
-		view.$viewModel.frame.size.didChange { newValue in
-			print("[View/Frame.Size] didChange: \(newValue)")
-		}.add(to: &observers)
-		view.$viewModel.frame.didChange(comparing: \.size) { newValue in
-			print("[View/Frame] (\\.size) didChange: \(newValue)")
-		}.add(to: &observers)
-		subview.$frame.didChange { newValue in
-			print("[SubView/Frame] didChange: \(newValue)")
-		}.add(to: &observers)
-		furtherView.$size.didChange { newValue in
-			print("[FurtherView/Size] didChange: \(newValue)")
-		}.add(to: &observers)
-
-		view.viewModel.frame = CGRect(x: 1, y: 2, width: 3, height: 4)
-		view.viewModel.frame = CGRect(x: 1, y: 2, width: 3, height: 4)
-		view.viewModel.frame.size = CGSize(width: 5, height: 6)
-		view.viewModel.frame.size = CGSize(width: 5, height: 6)
-
-		furtherView.size = CGSize(width: 7, height: 8)
-	}
-
-	func testViewStateObserver() {
-		let view = SomeView()
-		let subview = SomeSubview(frame: view.$viewModel.frame, cat: view.$viewModel.someString)
-		let furtherView = SomeFurtherSubview(size: subview.$frame.size)
-
-		view.$viewModel.frame.didChange { newValue in
-			print("[ViewModel/Frame] DidChange: \(newValue)")
-		}.add(to: &observers)
-		view.viewModel.$frame.didChange { newValue in
-			print("[ViewModel/$Frame] DidChange: \(newValue)")
-		}.add(to: &observers)
-		view.viewModel.$frame.size.didChange { newValue in
-			print("[ViewModel/$Frame.size] DidChange: \(newValue)")
-		}.add(to: &observers)
-		view.viewModel.frame = CGRect(x: 1, y: 2, width: 3, height: 4)
+		view.viewModel.optional?.size.width = 2
+		view.viewModel.optional = .zero
+		view.viewModel.optional?.origin.y = 20
+		view.viewModel.optional = nil
 	}
 
 	class SomeObject: ObservableObject {
@@ -111,8 +105,8 @@ final class ViewModelStateTests: XCTestCase {
 				print("FRAME CHANGED: \(frame)")
 			}
 		}
-		var toes: String = "Cute!" { didSet {
-			print("MIAOW")
+		@Published var optionalFrame: CGRect? = nil { didSet {
+			print("Optional frame changed: \(String(describing: optionalFrame))")
 		}}
 	}
 
@@ -122,10 +116,10 @@ final class ViewModelStateTests: XCTestCase {
 
 	class OtherSwiftUIView {
 		@Binding var size: CGSize
-		@Binding var cat: String
-		init(cat: Binding<String>, size: Binding<CGSize>) {
+		@Binding var frame: CGRect?
+		init(size: Binding<CGSize>, frame: Binding<CGRect?>) {
 			_size = size
-			_cat = cat
+			_frame = frame
 		}
 	}
 
@@ -134,10 +128,14 @@ final class ViewModelStateTests: XCTestCase {
 	func testSwiftUIExample() throws {
 		let view = SwiftUIView()
 		view.viewModel.$frame.sink { frame in
-			print("Publisher: \(frame)")
+			print("Frame publisher: \(frame)")
 		}.store(in: &cancellables)
-		let otherView = OtherSwiftUIView(cat: view.$viewModel.toes, size: view.$viewModel.frame.size)
+
+		view.viewModel.$optionalFrame.sink { frame in
+			print("Optional frame publisher: \(String(describing: frame))")
+		}.store(in: &cancellables)
+		let otherView = OtherSwiftUIView(size: view.$viewModel.frame.size, frame: view.$viewModel.optionalFrame)
 		otherView.size.width = 20
-		otherView.cat = "zo cute!"
+		otherView.frame = CGRect(x: 1, y: 2, width: 3, height: 4)
 	}
 }
