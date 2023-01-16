@@ -2,10 +2,6 @@
 /// and provides the functionality to subscribe to value changes through the `didChange` method.
 @propertyWrapper @dynamicMemberLookup
 public struct ValueProxy<Value>: ChangeObservable {
-	public func addChangeHandler(_ handler: ChangeHandler<Value>) -> Observer {
-		changeHandler(handler)
-	}
-
 	/// Closure accepting all available arguments for changes: the previous value, the new value and wether the handler was called with just the current value
 	public typealias DidChangeHandler = (_ oldValue: Value, _ newValue: Value, _ isInitial: Bool) -> Void
 	/// Closure providing just the new value of the change as it's only argument
@@ -30,19 +26,9 @@ public struct ValueProxy<Value>: ChangeObservable {
 	}
 }
 
-extension ChangeHandler {
-	/// New change handler, forwarding closures with  keyPath to applied to change
-	func passThrough<RootValue>(from keyPath: WritableKeyPath<RootValue, Value>) -> ChangeHandler<RootValue> {
-		.init(
-			shouldHandleChange: shouldHandleChange.map { handler in
-				{ handler($0.converted(with: keyPath)) }
-			},
-			updateWithCurrentValue: updateWithCurrentValue,
-			handler: { change in
-				// Pass through handler with keyPath applied to values
-				handler(change.converted(with: keyPath))
-			}
-		)
+extension ValueProxy {
+	public func addChangeHandler(_ handler: ChangeHandler<Value>) -> Observer {
+		changeHandler(handler)
 	}
 }
 

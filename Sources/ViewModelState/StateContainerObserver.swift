@@ -123,7 +123,7 @@ internal extension StateContainerObserver {
 		}
 	}
 
-	/// Weak wrapper for observer, capable of forwarding state changes
+	/// Weak wrapper for observer, forwarding state changes
 	struct WeakObserver: StateObserver, Equatable, Hashable {
 
 		let id: UUID
