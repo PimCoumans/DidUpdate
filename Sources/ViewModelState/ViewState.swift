@@ -1,6 +1,6 @@
-/// Available for any on properties of classes conforming to ``StateContainer``.
-/// `ViewState` makes sure that change handlers created through``ValueProxy/didChange(withLatest:_:)-5y47`` will be called with the  changes
-/// intercepted by this property wrapper.
+/// Available to properties on classes conforming to ``StateContainer``.
+/// `ViewState` makes sure that change handlers created through``ChangeObservable/didChange(withCurrent:handler:)-3mf14``
+/// will be called with the  changes intercepted by this property wrapper.
 @propertyWrapper
 public struct ViewState<Value> {
 

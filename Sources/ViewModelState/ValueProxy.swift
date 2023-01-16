@@ -1,5 +1,5 @@
 /// Forwards value getting and setting to its originating ``StateContainer`` class, wrapped by a ``ViewModel`` property wrapper,
-/// and provides the functionality to subscribe to value changes through the `didChange` method.
+/// and provides the functionality to subscribe to value changes through methods like ``ChangeObservable/didChange(withCurrent:handler:)-3mf14``
 @propertyWrapper @dynamicMemberLookup
 public struct ValueProxy<Value>: ChangeObservable {
 	/// Closure accepting all available arguments for changes: the previous value, the new value and wether the handler was called with just the current value

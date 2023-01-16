@@ -1,5 +1,3 @@
-
-
 /// Instructions on how to handle a state change
 public struct ChangeHandler<Value> {
 	let updateWithCurrentValue: Bool

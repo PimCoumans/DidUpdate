@@ -1,33 +1,20 @@
-/// `StateContainer` -> ObservableObject
-/// `ViewModel` -> ObservedObject
-/// `ViewState` -> Published
-/// `ValueProxy` -> Binding
-/// `ViewStateObserver` ->  AnyCancellable
-
-/*
- ## Value Proxies
- Pass through a `ValueProxy` to any other view (which will be able to use `@ValueProxy`) through the `@ViewModel`'s
- projected value:
- ```$viewModel.your.value```
-
- ## Get updates:
- Value updates are available through both the `ValueProxy` but also directly on `ViewState`
- ```
- observer = $viewModel.your.value.didChange { [weak self] old, new in }
- observer = viewModel.$your.value.didChange { [weak self] old, new in }
- ```
-
- And the returned observer can be stored in an array with the `add(to:)` method
- ```
- var observers: [ViewStateObserver] = []
- $viewModel.your.value.didChange { [weak self] new in /* ... */ }.add(to: &observers)
- ```
-
- */
-
-/// Enables change observation logic through `KeyPath` subscripts.
-/// Use `$viewModel.yourValue.didChange { ... }` to subscribe to changes
-/// or from within your viewModel: `self.$yourValue.didChange { ... }`
+/// Enables change observation logic on any class conforming to``StateContainer`` and creates so-called 'value proxies' through its projected value (using the`$` prefix).
+/// Relies on the ``ViewState`` property wrapper to update any observers, observing properties without this wrapper will log a warning (for now).
+///
+/// To subscribe to changes from your view use:
+/// ```
+/// $viewModel.yourValue.didChange { [weak self] newValue in
+///    print("yourValue changed: \(newValue)")
+/// }
+/// ```
+/// or from within your model class:
+/// ```
+/// init() {
+///     $yourValue.didChange { [unowned self] newValue in
+///         print("yourValue changed: \(newValue)")
+///     }
+/// }
+/// ```
 @propertyWrapper
 public struct ViewModel<Model: StateContainer> {
 
