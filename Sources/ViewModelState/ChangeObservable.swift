@@ -25,7 +25,7 @@ extension ChangeHandler {
 		self.updateWithCurrentValue = updateWithCurrent
 		self.handler = { change in
 			switch change {
-			case .initial(let value):
+			case .current(let value):
 				handler(value, value, true)
 			case .changed(let old, let new):
 				handler(old, new, false)
@@ -53,6 +53,7 @@ public protocol ChangeObservable {
 	associatedtype Value
 	typealias Observer = ViewStateObserver
 
+	/// Not to be called directly, but rather implemented by types conforming to `ChangeObservable`.
 	/// Implement this method to create a ``ViewStateObserver`` with the provided ``ChangeHandler``
 	/// - Parameter handler: Change handler, properly configured through one of the `didChange` methods
 	/// - Returns: Newly created ``ViewStateObserver`` that calls the provide change handler
@@ -129,7 +130,7 @@ public extension ChangeObservable where Value: Equatable {
 extension StateChange where Value: Equatable {
 	@inlinable var hasChangedValue: Bool {
 		switch self {
-		case .initial: return true
+		case .current: return true
 		case .changed(let old, let new): return old != new
 		}
 	}
@@ -156,8 +157,8 @@ extension StateChange {
 	@inlinable
 	func converted<Subject>(with keyPath: KeyPath<Value, Subject>) -> StateChange<Subject> {
 		switch self {
-		case .initial(let value):
-			return .initial(value: value[keyPath: keyPath])
+		case .current(let value):
+			return .current(value: value[keyPath: keyPath])
 		case .changed(let old, let new):
 			return .changed(old: old[keyPath: keyPath], new: new[keyPath: keyPath])
 		}

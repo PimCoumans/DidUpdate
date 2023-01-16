@@ -51,7 +51,7 @@ internal extension StateContainer {
 		}
 		let observer = changeObserver.addObserver(keyPath: keyPath, handler: handler)
 		if handler.updateWithCurrentValue {
-			observer.handleChange(.initial(value: self[keyPath: keyPath]))
+			observer.handleChange(.current(value: self[keyPath: keyPath]))
 		}
 		return ViewStateObserver(observer)
 	}
@@ -60,7 +60,7 @@ internal extension StateContainer {
 /// Type of change an observer is called with
 internal enum StateChange<Value> {
 	/// Called when initial value should be provided
-	case initial(value: Value)
+	case current(value: Value)
 	/// Called when state was updated but not necessarily to different value
 	case changed(old: Value, new: Value)
 }
