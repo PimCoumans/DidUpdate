@@ -29,7 +29,6 @@ public class StateChangeObserver {
 
 // Forwarding calls to StateChangeObserver
 internal extension StateContainer {
-
 	/// Calls all observers for the given keyPath with new and old value
 	func notifyChange<Value>(
 		at keyPath: ReferenceWritableKeyPath<Self, Value>,
@@ -61,17 +60,6 @@ internal enum StateChange<Value> {
 	case initial(value: Value)
 	/// Called when state was updated but not necessarily to different value
 	case changed(old: Value, new: Value)
-}
-
-/// Instructions on how to handle a state change
-internal struct ChangeHandler<Value> {
-	let shouldHandleChange: ((_ change: StateChange<Value>) -> Bool)?
-	let acceptsInitialValue: Bool
-	let handler: (_ change: StateChange<Value>) -> Void
-
-	func handles(_ change: StateChange<Value>) -> Bool {
-		shouldHandleChange?(change) ?? true
-	}
 }
 
 /// Any observer capable of handling a state change

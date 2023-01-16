@@ -8,12 +8,18 @@ final class ViewModelStateTests: XCTestCase {
 	class SomeViewModel: StateContainer {
 		@ViewState var frame: CGRect = .zero {
 			didSet {
-				print("ViewModel DidSet called: \(frame)")
+				print("[ViewModel/Frame] DidSet: \(frame)")
 			}
 		}
-		@ViewState var toesje: String = "Lief" {
+		@ViewState var array: [Int] = [0] {
 			didSet {
-				print("MIAOW: \(toesje)")
+				print("[ViewModel/Array] Updated: \(array)")
+			}
+		}
+
+		var someString: String = "Nothing" {
+			didSet {
+				print("[ViewModel/someString] DidSet")
 			}
 		}
 	}
@@ -40,73 +46,37 @@ final class ViewModelStateTests: XCTestCase {
 
 	var observers: [ViewStateObserver] = []
 
-    func testExample() throws {
-
+	func testStuff() {
 		let view = SomeView()
-		let subview = SomeSubview(frame: view.$viewModel.frame, cat: view.$viewModel.toesje)
-		let furtherSubview = SomeFurtherSubview(size: subview.$frame.size)
-		view.$viewModel.frame.didChange { old, new, _ in
-			print("View frame handler called: \(old), \(new)")
+		let subview = SomeSubview(frame: view.$viewModel.frame, cat: view.$viewModel.someString)
+		let furtherView = SomeFurtherSubview(size: subview.$frame.size)
+
+		view.$viewModel.frame.didChange(compareEqual: false) { newValue in
+			print("[View/Frame] Updated: \(newValue)")
 		}.add(to: &observers)
-		subview.cat = "ZO CUTE, OMG!"
-		subview.$frame.didChange { old, new, _ in
-			print("Subview frame handler called: \(old), \(new)")
+		view.$viewModel.frame.didChange { newValue in
+			print("[View/Frame] Changed: \(newValue)")
 		}.add(to: &observers)
-		subview.$frame.didChange(comparing: \.size.width) { oldValue, newValue, isInitial in
-			print("Width changed!")
+		view.$viewModel.frame.size.didChange { newValue in
+			print("[View/Frame.Size] didChange: \(newValue)")
 		}.add(to: &observers)
-		furtherSubview.$size.didChange { old, new, _ in
-			print("Further size handler called: \(old), \(new)")
+		view.$viewModel.frame.didChange(comparing: \.size) { newValue in
+			print("[View/Frame] (\\.size) didChange: \(newValue)")
 		}.add(to: &observers)
-
-		view.$viewModel.toesje.didChange { oldValue, newValue, isInitial in
-			print("TOESJE: \(newValue)")
+		subview.$frame.didChange { newValue in
+			print("[SubView/Frame] didChange: \(newValue)")
 		}.add(to: &observers)
-		view.viewModel.observableValues.frame.didChange { newValue in
-			print("value: \(newValue)")
+		furtherView.$size.didChange { newValue in
+			print("[FurtherView/Size] didChange: \(newValue)")
 		}.add(to: &observers)
 
-		print(1)
-		print(view.viewModel.frame)
-		print(subview.frame)
-		print(furtherSubview.size)
-
-		print(2)
-		view.viewModel.frame.size = CGSize(width: 20, height: 40)
-
-		print(3)
-		print(view.viewModel.frame)
-		print(subview.frame)
-		print(furtherSubview.size)
-
-		print(4)
-		subview.frame.size = CGSize(width: 20, height: 69)
-
-		print(5)
-		print(view.viewModel.frame)
-		print(subview.frame)
-		print(furtherSubview.size)
-
-		print(6)
-		furtherSubview.size = CGSize(width: 13, height: 777)
-
-		print(7)
-		print(view.viewModel.frame)
-		print(subview.frame)
-		print(furtherSubview.size)
-
-		print(8)
-		view.viewModel.frame.size = CGSize(width: 13, height: 777)
 		view.viewModel.frame = CGRect(x: 1, y: 2, width: 3, height: 4)
+		view.viewModel.frame = CGRect(x: 1, y: 2, width: 3, height: 4)
+		view.viewModel.frame.size = CGSize(width: 5, height: 6)
+		view.viewModel.frame.size = CGSize(width: 5, height: 6)
 
-		print(9)
-		view.viewModel.toesje = "MIAOW"
-
-		print(10)
-
-		observers.removeAll()
-
-    }
+		furtherView.size = CGSize(width: 7, height: 8)
+	}
 
 	class SomeObject: ObservableObject {
 		@Published var frame: CGRect = .zero {
