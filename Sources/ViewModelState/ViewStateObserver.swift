@@ -9,7 +9,7 @@ public struct ViewStateObserver {
 	}
 }
 
-extension ViewStateObserver: Hashable {
+extension ViewStateObserver: Equatable, Hashable {
 	public static func == (lhs: ViewStateObserver, rhs: ViewStateObserver) -> Bool {
 		ObjectIdentifier(lhs.observer) == ObjectIdentifier(rhs.observer)
 	}
@@ -28,5 +28,19 @@ extension ViewStateObserver {
 
 	public func add(to set: inout Set<ViewStateObserver>) {
 		set.insert(self)
+	}
+}
+
+@resultBuilder
+public struct ObserverBuilder {
+	public static func buildBlock(_ components: ViewStateObserver...) -> [ViewStateObserver] {
+		components
+	}
+}
+
+public extension RangeReplaceableCollection where Element == ViewStateObserver {
+	/// Adds all resulting observers created in the builder closure
+	mutating func add(@ObserverBuilder _ builder: () -> [ViewStateObserver]) {
+		append(contentsOf: builder())
 	}
 }
