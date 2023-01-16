@@ -2,17 +2,19 @@
 
 /// Instructions on how to handle a state change
 public struct ChangeHandler<Value> {
-	let shouldHandleChange: ((_ change: StateChange<Value>) -> Bool)?
 	let updateWithCurrentValue: Bool
-	let handler: (_ change: StateChange<Value>) -> Void
+	private let shouldHandleChange: ((_ change: StateChange<Value>) -> Bool)?
+	private let handler: (_ change: StateChange<Value>) -> Void
 
-	func handles(_ change: StateChange<Value>) -> Bool {
-		shouldHandleChange?(change) ?? true
+	func handle(change: StateChange<Value>) {
+		guard shouldHandleChange?(change) ?? true else {
+			return
+		}
+		handler(change)
 	}
 }
 
-internal extension ChangeHandler {
-
+extension ChangeHandler {
 	/// Convenience initializer converting a ``StateChange`` to a ``ValueProxy/DidChangeHandler```
 	init(
 		shouldHandleChange: ((_ change: StateChange<Value>) -> Bool)? = nil,
@@ -29,6 +31,20 @@ internal extension ChangeHandler {
 				handler(old, new, false)
 			}
 		}
+	}
+
+	/// Creates change handler forwarding closures with keyPath applied to change
+	func passThrough<RootValue>(from keyPath: WritableKeyPath<RootValue, Value>) -> ChangeHandler<RootValue> {
+		.init(
+			updateWithCurrentValue: updateWithCurrentValue,
+			shouldHandleChange: shouldHandleChange.map { handler in
+				{ handler($0.converted(with: keyPath)) }
+			},
+			handler: { change in
+				// Pass through handler with keyPath applied to values
+				handler(change.converted(with: keyPath))
+			}
+		)
 	}
 }
 

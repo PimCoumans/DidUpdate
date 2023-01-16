@@ -95,7 +95,7 @@ internal extension StateContainerObserver {
 		return observer
 	}
 
-	/// The actual observer of any state change, including its full key path and conditionally calls the change handler
+	/// The actual observer of any state change, with a reference to the keyPath and executes the provided change handler
 	class Observer<Value>: StateObserver {
 		typealias ID = UUID
 
@@ -119,9 +119,7 @@ internal extension StateContainerObserver {
 			guard let change = change as? StateChange<Value> else {
 				preconditionFailure("Updated called with wrong type: \(change)")
 			}
-			if changeHandler.handles(change) {
-				changeHandler.handler(change)
-			}
+			changeHandler.handle(change: change)
 		}
 	}
 
