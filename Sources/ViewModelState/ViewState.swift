@@ -2,7 +2,7 @@
 /// `ViewState` makes sure that change handlers created through``ValueProxy/didChange(withLatest:_:)-5y47`` will be called with the  changes
 /// intercepted by this property wrapper.
 @propertyWrapper
-public struct ViewState<Value: Equatable> {
+public struct ViewState<Value> {
 
 	private var storage: Value
 	public init(wrappedValue: Value) {

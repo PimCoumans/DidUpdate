@@ -2,8 +2,8 @@
 public struct ViewStateObserver {
 	private var observer: AnyObject
 
-	internal init<Container, Value: Equatable>(
-		_ observer: StateChangeObserver.Observer<Container, Value>
+	internal init<Value>(
+		_ observer: StateChangeObserver.Observer<Value>
 	) {
 		self.observer = observer
 	}

@@ -31,8 +31,8 @@ public class StateChangeObserver {
 internal extension StateContainer {
 
 	/// Calls all observers for the given keyPath with new and old value
-	func notifyChange<Value: Equatable>(
-		at keyPath: WritableKeyPath<Self, Value>,
+	func notifyChange<Value>(
+		at keyPath: ReferenceWritableKeyPath<Self, Value>,
 		from oldValue: Value,
 		to newValue: Value
 	) {
@@ -40,8 +40,8 @@ internal extension StateContainer {
 	}
 
 	/// Creates an observer for the value at the given keyPath
-	func addObserver<Value: Equatable>(
-		keyPath: WritableKeyPath<Self, Value>,
+	func addObserver<Value>(
+		keyPath: ReferenceWritableKeyPath<Self, Value>,
 		handler: ChangeHandler<Value>
 	) -> ViewStateObserver {
 		changeObserver.expectPing(for: keyPath) {
@@ -56,7 +56,7 @@ internal extension StateContainer {
 }
 
 /// Type of change an observer is called with
-internal enum StateChange<Value: Equatable> {
+internal enum StateChange<Value> {
 	/// Called when initial value should be provided
 	case initial(value: Value)
 	/// Called when state was updated but not necessarily to different value
@@ -64,7 +64,8 @@ internal enum StateChange<Value: Equatable> {
 }
 
 /// Instructions on how to handle a state change
-internal struct ChangeHandler<Value: Equatable> {
+internal struct ChangeHandler<Value> {
+	let compareEquality: Bool = false
 	let shouldHandleChange: (_ change: StateChange<Value>) -> Bool
 	let acceptsInitialValue: Bool
 	let handler: (_ change: StateChange<Value>) -> Void
@@ -72,18 +73,25 @@ internal struct ChangeHandler<Value: Equatable> {
 
 /// Any observer capable of handling a state change
 internal protocol StateObserver {
-	func handleChange(_ change: StateChange<some Equatable>)
+	func handleChange<Value>(_ change: StateChange<Value>)
 }
 
 internal extension StateChangeObserver {
 
-	fileprivate func handleChange<Value: Equatable>(keyPath: AnyKeyPath, from oldValue: Value, to newValue: Value) {
+	fileprivate func handleChange<Container: StateContainer, Value>(
+		keyPath: ReferenceWritableKeyPath<Container, Value>,
+		from oldValue: Value,
+		to newValue: Value
+	) {
 		for observer in observers.filter({ $0.keyPath == keyPath }) {
 			observer.handleChange(.changed(old: oldValue, new: newValue))
 		}
 	}
 
-	fileprivate func addObserver<Container: StateContainer, Value: Equatable>(keyPath: WritableKeyPath<Container, Value>, handler: ChangeHandler<Value>) -> Observer<Container, Value> {
+	fileprivate func addObserver<Container: StateContainer, Value>(
+		keyPath: ReferenceWritableKeyPath<Container, Value>,
+		handler: ChangeHandler<Value>
+	) -> Observer<Value> {
 		let observer = Observer(keyPath: keyPath, handler: handler)
 		observer.onRelease = { [weak self] id in
 			self?.observers.removeAll(where: { $0.id == id })
@@ -93,17 +101,17 @@ internal extension StateChangeObserver {
 	}
 
 	/// The actual observer of any state change, including its full key path and conditionally calls the change handler
-	class Observer<Container, Value: Equatable>: StateObserver {
+	class Observer<Value>: StateObserver {
 		typealias ID = UUID
 
 		let id: ID = UUID()
-		let keyPath: WritableKeyPath<Container, Value>
+		let keyPath: AnyKeyPath
 		let changeHandler: ChangeHandler<Value>
 
 		/// Closure called when observer is deallocated
 		var onRelease: ((_ id: ID) -> Void)?
 
-		init(keyPath: WritableKeyPath<Container, Value>, handler: ChangeHandler<Value>) {
+		init(keyPath: AnyKeyPath, handler: ChangeHandler<Value>) {
 			self.keyPath = keyPath
 			self.changeHandler = handler
 		}
@@ -112,11 +120,11 @@ internal extension StateChangeObserver {
 			onRelease?(id)
 		}
 
-		func handleChange(_ change: StateChange<some Equatable>) {
+		func handleChange<ChangedValue>(_ change: StateChange<ChangedValue>) {
 			guard let change = change as? StateChange<Value> else {
 				preconditionFailure("Updated called with wrong type: \(change)")
 			}
-			if change.hasChanged && changeHandler.shouldHandleChange(change) {
+			if changeHandler.shouldHandleChange(change) {
 				changeHandler.handler(change)
 			}
 		}
@@ -129,7 +137,7 @@ internal extension StateChangeObserver {
 		let keyPath: AnyKeyPath
 		let observer: () -> (any StateObserver)?
 
-		init<Container: StateContainer>(_ observer: Observer<Container, some Equatable>) {
+		init<Value>(_ observer: Observer<Value>) {
 			self.id = observer.id
 			self.keyPath = observer.keyPath as AnyKeyPath
 			self.observer = { [weak observer] in
@@ -138,7 +146,7 @@ internal extension StateChangeObserver {
 		}
 
 		@inlinable
-		func handleChange(_ change: StateChange<some Equatable>) {
+		func handleChange<Value>(_ change: StateChange<Value>) {
 			observer()?.handleChange(change)
 		}
 

@@ -26,7 +26,7 @@ public struct ObservableValues<Model: StateContainer> {
 		self.viewModel = viewModel
 	}
 
-	public subscript<Value: Equatable>(
+	public subscript<Value>(
 		dynamicMember keyPath: ReferenceWritableKeyPath<Model, Value>
 	) -> ValueProxy<Value> {
 		ValueProxy(

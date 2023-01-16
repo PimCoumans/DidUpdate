@@ -1,7 +1,7 @@
 /// Forwards value getting and setting to its originating ``StateContainer`` class, wrapped by a ``ViewModel`` property wrapper,
 /// and provides the functionality to subscribe to value changes through the `didChange` method.
 @propertyWrapper @dynamicMemberLookup
-public struct ValueProxy<Value: Equatable> {
+public struct ValueProxy<Value> {
 	/// Closure accepting all available arguments for changes: the previous value, the new value and wether the handler was called with just the current value
 	public typealias DidChangeHandler = (_ oldValue: Value, _ newValue: Value, _ isInitial: Bool) -> Void
 	/// Closure providing just the new value of the change as it's only argument
@@ -64,13 +64,13 @@ public extension ValueProxy {
 	///   - provideLatestValue: Wether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
-	func didChange(
-		comparing keyPath: KeyPath<Value, some Equatable>,
+	func didChange<Subject>(
+		comparing keyPath: KeyPath<Value, Subject>,
 		withLatest provideLatestValue: Bool = false,
 		_ handler: @escaping DidChangeHandler
 	) -> ViewStateObserver {
 		addChangeHandler(.init(
-			shouldHandleChange: { $0.converted(with: keyPath).hasChanged },
+			shouldHandleChange: { $0.converted(with: keyPath).hasChangedValueIfEquatable },
 			acceptsInitialValue: provideLatestValue,
 			handler: handler
 		))
@@ -82,13 +82,13 @@ public extension ValueProxy {
 	///   - provideLatestValue: Wether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing just the new value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
-	func didChange(
-		comparing keyPath: KeyPath<Value, some Equatable>,
+	func didChange<Subject>(
+		comparing keyPath: KeyPath<Value, Subject>,
 		withLatest provideLatestValue: Bool = false,
 		_ handler: @escaping SingleValueDidChangeHandler
 	) -> ViewStateObserver {
 		addChangeHandler(.init(
-			shouldHandleChange: { $0.converted(with: keyPath).hasChanged },
+			shouldHandleChange: { $0.converted(with: keyPath).hasChangedValueIfEquatable },
 			acceptsInitialValue: provideLatestValue,
 			handler: { _, new, _ in handler(new)}
 		))
@@ -98,7 +98,7 @@ public extension ValueProxy {
 extension StateChange {
 	/// Converts the change's values to the value at provided keyPath
 	@inlinable
-	func converted<Subject: Equatable>(with keyPath: KeyPath<Value, Subject>) -> StateChange<Subject> {
+	func converted<Subject>(with keyPath: KeyPath<Value, Subject>) -> StateChange<Subject> {
 		switch self {
 		case .initial(let value):
 			return .initial(value: value[keyPath: keyPath])
@@ -106,15 +106,24 @@ extension StateChange {
 			return .changed(old: old[keyPath: keyPath], new: new[keyPath: keyPath])
 		}
 	}
+}
 
-	/// Wether a change should be accepted as such.
-	/// - Note: An `.initial` change is always regarded as having changed
+extension Equatable {
+	func equals(_ other: Any) -> Bool {
+		other as? Self == self
+	}
+}
+
+extension StateChange {
+	/// Wether the values of the StateChange are different when `Value` conforms to `Equatable`
+	/// - Note: `.initial` is always regarded as having a changed value
 	@inlinable
-	var hasChanged:  Bool {
+	var hasChangedValueIfEquatable: Bool {
 		switch self {
-		case .initial(_): return true
-		case .changed(let old, let new) where old != new: return true
-		default: return false
+		case .initial: return true
+		case .changed(let old as any Equatable, let new as any Equatable):
+			return !old.equals(new)
+		case .changed: return true
 		}
 	}
 }
@@ -141,7 +150,7 @@ extension ChangeHandler {
 
 	/// New change handler, forwarding closures with  keyPath to applied to change
 	@inlinable
-	func passThrough<RootValue: Equatable>(from keyPath: WritableKeyPath<RootValue, Value>) -> ChangeHandler<RootValue> {
+	func passThrough<RootValue>(from keyPath: WritableKeyPath<RootValue, Value>) -> ChangeHandler<RootValue> {
 		.init(
 			shouldHandleChange: { change in
 				shouldHandleChange(change.converted(with: keyPath))
