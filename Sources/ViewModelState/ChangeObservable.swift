@@ -34,7 +34,7 @@ extension ChangeHandler {
 	}
 
 	/// Creates change handler forwarding closures with keyPath applied to change
-	func passThrough<RootValue>(from keyPath: WritableKeyPath<RootValue, Value>) -> ChangeHandler<RootValue> {
+	func passThrough<RootValue>(from keyPath: KeyPath<RootValue, Value>) -> ChangeHandler<RootValue> {
 		.init(
 			updateWithCurrentValue: updateWithCurrentValue,
 			shouldHandleChange: shouldHandleChange.map { handler in
@@ -161,6 +161,20 @@ extension StateChange {
 			return .current(value: value[keyPath: keyPath])
 		case .changed(let old, let new):
 			return .changed(old: old[keyPath: keyPath], new: new[keyPath: keyPath])
+		}
+	}
+}
+
+extension StateChange where Value: ExpressibleByNilLiteral {
+
+	/// Converts the change's values to the value at provided keyPath
+	@inlinable
+	func converted<Wrapped, Subject>(with keyPath: KeyPath<Wrapped, Subject>) -> StateChange<Subject?> where Value == Optional<Wrapped> {
+		switch self {
+		case .current(let value):
+			return .current(value: value?[keyPath: keyPath])
+		case .changed(let old, let new):
+			return .changed(old: old?[keyPath: keyPath], new: new?[keyPath: keyPath])
 		}
 	}
 }

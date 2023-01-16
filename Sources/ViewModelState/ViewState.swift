@@ -18,7 +18,7 @@ public struct ViewState<Value> {
 		}
 
 		public subscript<Subject>(
-			dynamicMember keyPath: WritableKeyPath<Value, Subject>
+			dynamicMember keyPath: KeyPath<Value, Subject>
 		) -> ViewState<Subject>.Observer {
 			.init { handler in
 				changeHandler(handler.passThrough(from: keyPath))
