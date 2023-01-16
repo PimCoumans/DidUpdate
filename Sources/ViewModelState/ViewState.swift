@@ -12,6 +12,7 @@ public struct ViewState<Value> {
 	@dynamicMemberLookup
 	public struct Observer: ChangeObservable {
 		let changeHandler: (_ handler: ChangeHandler<Value>) -> ViewStateObserver
+
 		public func addChangeHandler(_ handler: ChangeHandler<Value>) -> ViewStateObserver {
 			changeHandler(handler)
 		}
@@ -41,8 +42,7 @@ public struct ViewState<Value> {
 			let oldValue = instance[keyPath: storageKeyPath].storage
 			instance[keyPath: storageKeyPath].storage = newValue
 			/// Notify `StateContainer` of change
-			instance.notifyChange(at: wrappedKeyPath, from: oldValue, to: newValue)
-			instance.notifyChange(at: storageKeyPath, from: oldValue, to: newValue)
+			instance.notifyChange(at: wrappedKeyPath, from: storageKeyPath, from: oldValue, to: newValue)
 		}
 	}
 

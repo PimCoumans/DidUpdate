@@ -33,11 +33,12 @@ public class StateContainerObserver {
 internal extension StateContainer {
 	/// Calls all observers for the given keyPath with new and old value
 	func notifyChange<Value>(
-		at keyPath: PartialKeyPath<Self>,
+		at keyPath: KeyPath<Self, Value>,
+		from storage: KeyPath<Self, ViewState<Value>>,
 		from oldValue: Value,
 		to newValue: Value
 	) {
-		changeObserver.handleChange(keyPath: keyPath, from: oldValue, to: newValue)
+		changeObserver.handleChange(at: keyPath, storage: storage, from: oldValue, to: newValue)
 	}
 
 	/// Creates an observer for the value at the given keyPath
@@ -72,11 +73,12 @@ internal protocol StateObserver {
 internal extension StateContainerObserver {
 
 	fileprivate func handleChange<Value>(
-		keyPath: AnyKeyPath,
+		at valueKeyPath: AnyKeyPath,
+		storage storageKeyPath: AnyKeyPath,
 		from oldValue: Value,
 		to newValue: Value
 	) {
-		for observer in observers.filter({ $0.keyPath == keyPath }) {
+		for observer in observers.filter({ $0.keyPath == valueKeyPath || $0.keyPath == storageKeyPath }) {
 			observer.handleChange(.changed(old: oldValue, new: newValue))
 		}
 	}
