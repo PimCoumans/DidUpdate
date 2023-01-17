@@ -1,10 +1,10 @@
-/// Available to properties on classes conforming to ``StateContainer``.
-/// `ViewState` makes sure that change handlers created through``ChangeObservable/didChange(withCurrent:handler:)-3mf14``
+/// Available to properties on classes conforming to ``ObservableState``.
+/// `ObservedValue` makes sure that change handlers created through``ChangeObservable/didChange(withCurrent:handler:)-3mf14``
 /// will be called with the  changes intercepted by this property wrapper.
 @propertyWrapper
-public struct ViewState<Value> {
+public struct ObservedValue<Value> {
 
-	private var storage: Value
+	internal var storage: Value
 	public init(wrappedValue: Value) {
 		self.storage = wrappedValue
 	}
@@ -19,15 +19,15 @@ public struct ViewState<Value> {
 
 		public subscript<Subject>(
 			dynamicMember keyPath: KeyPath<Value, Subject>
-		) -> ViewState<Subject>.Observer {
+		) -> ObservedValue<Subject>.Observer {
 			.init { handler in
 				changeHandler(handler.passThrough(from: keyPath))
 			}
 		}
 	}
 
-	/// Updates  the enclosing ``StateContainer``'s ``StateContainerObserver`` whenever the value is changed
-	public static subscript<EnclosingSelf: StateContainer>(
+	/// Updates  the enclosing ``ObservableState``'s ``StateContainerObserver`` whenever the value is changed
+	public static subscript<EnclosingSelf: ObservableState>(
 		_enclosingInstance instance: EnclosingSelf,
 		wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Value>,
 		storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Self>
@@ -46,7 +46,7 @@ public struct ViewState<Value> {
 		}
 	}
 
-	public static subscript<EnclosingSelf: StateContainer>(
+	public static subscript<EnclosingSelf: ObservableState>(
 		_enclosingInstance instance: EnclosingSelf,
 		projected projectedKeyPath: KeyPath<EnclosingSelf, Observer>,
 		storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Self>

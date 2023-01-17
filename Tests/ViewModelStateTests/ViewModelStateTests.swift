@@ -138,10 +138,49 @@ final class ViewModelStateTests: XCTestCase {
 		bool.expect(false) { view.viewModel.frame.origin.x = 20 }
 		// Change called when width is updated
 		bool.expect(true) { view.viewModel.frame.size.width = 20 }
+		// Change called immediately with current value
+		bool.expect(true) {
+			observer = view.$viewModel.frame.didChange(withCurrent: true, handler: { newValue in
+				bool.value = true
+			})
+		}
 	}
 
 	func testStateValueObservers() {
-		
+		// Same as above but using projected value of `@StateValue` property wrappers
+		let view = SomeView()
+		let bool = BooleanContainer()
+		view.viewModel.frame = .zero
+		let basicFrame = CGRect(x: 1, y: 2, width: 3, height: 4)
+
+		// Reuse same observer variable so active observer gets replaced
+		var observer = view.viewModel.$frame.didChange { newValue in
+			bool.value = true
+		}
+		_ = observer // hush little 'never read' warning
+		// Changed called when frame actually changed
+		bool.expect(true) { view.viewModel.frame = basicFrame }
+		// But not when set to the same value
+		bool.expect(false) { view.viewModel.frame = basicFrame }
+
+		observer = view.viewModel.$frame.didChange(compareEqual: false, handler: { newValue in
+			bool.value = true
+		})
+		// Change called when set to the same value
+		bool.expect(true) { view.viewModel.frame = basicFrame }
+		observer = view.viewModel.$frame.didChange(comparing: \.width, { newValue in
+			bool.value = true
+		})
+		// Change not called when origin is updated
+		bool.expect(false) { view.viewModel.frame.origin.x = 20 }
+		// Change called when width is updated
+		bool.expect(true) { view.viewModel.frame.size.width = 20 }
+		// Change called immediately with current value
+		bool.expect(true) {
+			observer = view.viewModel.$frame.didChange(withCurrent: true, handler: { newValue in
+				bool.value = true
+			})
+		}
 	}
 
 	class SomeObject: ObservableObject {

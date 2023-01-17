@@ -1,6 +1,6 @@
 import Foundation
 
-/// Observer attached to any class conforming to ``StateContainer``, used together with the ``ViewModel`` property wrapper observer to be added for any values.
+/// Observer attached to any class conforming to ``ObservableState``, used together with the ``ObservedState`` property wrapper observer to be added for any values.
 public class StateContainerObserver {
 
 	private var observers: [WeakObserver] = []
@@ -8,20 +8,20 @@ public class StateContainerObserver {
 	private var receivedPing: Bool = false
 	private var validatedObservedValues: Set<AnyKeyPath> = []
 
-	/// Signals a property getter was intercepted by a ``ViewState`` property wrapper
+	/// Signals a property getter was intercepted by a ``ObservedValue`` property wrapper
 	internal func ping() {
 		receivedPing = true
 	}
 
-	/// Logs a warning when getter of property at given keyPath isn‘t wrapped by ``ViewState``, so change handler would never be called
-	/// Does not attempt to cast result to `Value`, instead also accepts when result is a `ViewState` itself
+	/// Logs a warning when getter of property at given keyPath isn‘t wrapped by ``ObservedValue``, so change handler would never be called
+	/// Does not attempt to cast result to `Value`, instead also accepts when result is a `ObservedValue` itself
 	fileprivate func validateGetter<Value>(for keyPath: AnyKeyPath, expecting: Value.Type, getter: () -> Any) {
 		guard !validatedObservedValues.contains(keyPath) else {
 			return
 		}
 		receivedPing = false
 		let result = getter()
-		if receivedPing || result is ViewState<Value> {
+		if receivedPing || result is ObservedValue<Value> {
 			validatedObservedValues.insert(keyPath)
 		} else {
 			print("Warning: change handlers for property \(type(of: keyPath)) won‘t be called as it doesn‘t have a @ViewState property wrapper!")
@@ -30,11 +30,11 @@ public class StateContainerObserver {
 }
 
 // Forwarding calls to StateChangeObserver
-internal extension StateContainer {
+internal extension ObservableState {
 	/// Calls all observers for the given keyPath with new and old value
 	func notifyChange<Value>(
 		at keyPath: KeyPath<Self, Value>,
-		from storage: KeyPath<Self, ViewState<Value>>,
+		from storage: KeyPath<Self, ObservedValue<Value>>,
 		from oldValue: Value,
 		to newValue: Value
 	) {
@@ -51,7 +51,12 @@ internal extension StateContainer {
 		}
 		let observer = changeObserver.addObserver(keyPath: keyPath, handler: handler)
 		if handler.updateWithCurrentValue {
-			observer.handleChange(.current(value: self[keyPath: keyPath]))
+			if let currentValue = self[keyPath: keyPath] as? Value {
+				observer.handleChange(.current(value: currentValue))
+			} else if let wrapper = self[keyPath: keyPath] as? ObservedValue<Value> {
+				/// When adding observer from ``StateValue`` the keyPath points to the wrapper itself
+				observer.handleChange(.current(value: wrapper.storage))
+			}
 		}
 		return ViewStateObserver(observer)
 	}

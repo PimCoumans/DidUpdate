@@ -30,13 +30,12 @@ public struct ObservedState<StateObject: ObservableState> {
 			dynamicMember keyPath: ReferenceWritableKeyPath<StateObject, Value>
 		) -> ValueProxy<Value> {
 			ValueProxy(
-				get: { viewModel[keyPath: keyPath]},
 				get: { object[keyPath: keyPath]},
 				set: { newValue in
 					object[keyPath: keyPath] = newValue
 				},
 				changeHandler: { changeHandler in
-					object.addObserver(keyPath: keyPath, type: Value.self, handler: changeHandler)
+					object.addObserver(keyPath: keyPath, handler: changeHandler)
 				}
 			)
 		}
