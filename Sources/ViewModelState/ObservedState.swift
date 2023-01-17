@@ -1,5 +1,5 @@
-/// Enables change observation logic on any class conforming to``StateContainer`` and creates so-called 'value proxies' through its projected value (using the`$` prefix).
-/// Relies on the ``ViewState`` property wrapper to update any observers, observing properties without this wrapper will log a warning (for now).
+/// Enables change observation logic on any class conforming to``ObservableState`` and creates so-called 'value proxies' through its projected value (using the`$` prefix).
+/// Relies on the ``ObservedValue`` property wrapper to update any observers, observing properties without this wrapper will log a warning (for now).
 ///
 /// To subscribe to changes from your view use:
 /// ```
@@ -16,26 +16,27 @@
 /// }
 /// ```
 @propertyWrapper
-public struct ViewModel<Model: StateContainer> {
+public struct ObservedState<StateObject: ObservableState> {
 
 	/// Creates `ValueProxy` structs to forward getting and setting of values and allow adding observers for specific keyPaths
 	@dynamicMemberLookup
 	public struct ObservableValues {
-		fileprivate var viewModel: Model
-		public init(viewModel: Model) {
-			self.viewModel = viewModel
+		fileprivate var object: StateObject
+		public init(observing: StateObject) {
+			self.object = observing
 		}
 
 		public subscript<Value>(
-			dynamicMember keyPath: ReferenceWritableKeyPath<Model, Value>
+			dynamicMember keyPath: ReferenceWritableKeyPath<StateObject, Value>
 		) -> ValueProxy<Value> {
 			ValueProxy(
 				get: { viewModel[keyPath: keyPath]},
+				get: { object[keyPath: keyPath]},
 				set: { newValue in
-					viewModel[keyPath: keyPath] = newValue
+					object[keyPath: keyPath] = newValue
 				},
 				changeHandler: { changeHandler in
-					viewModel.addObserver(keyPath: keyPath, handler: changeHandler)
+					object.addObserver(keyPath: keyPath, type: Value.self, handler: changeHandler)
 				}
 			)
 		}
@@ -43,10 +44,10 @@ public struct ViewModel<Model: StateContainer> {
 
 	private var observableValues: ObservableValues
 
-	public init(wrappedValue: Model) {
-		observableValues = ObservableValues(viewModel: wrappedValue)
+	public init(wrappedValue: StateObject) {
+		observableValues = ObservableValues(observing: wrappedValue)
 	}
 
-	public var wrappedValue: Model { observableValues.viewModel }
+	public var wrappedValue: StateObject { observableValues.object }
 	public var projectedValue: ObservableValues { observableValues }
 }

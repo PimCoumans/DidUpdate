@@ -14,7 +14,7 @@ class BooleanContainer {
 
 final class ViewModelStateTests: XCTestCase {
 
-	class SomeViewModel: StateContainer {
+	class SomeViewModel: ObservableState {
 
 		struct ViewModelProperty {
 			var string: String = "SomeString"
@@ -26,28 +26,28 @@ final class ViewModelStateTests: XCTestCase {
 		}
 
 		let frameBoolean = BooleanContainer()
-		@ViewState var frame: CGRect = .zero { didSet {
+		@ObservedValue var frame: CGRect = .zero { didSet {
 			frameBoolean.value = true
 		}}
 
 		let arrayBoolean = BooleanContainer()
-		@ViewState var array: [Int] = [0] { didSet {
+		@ObservedValue var array: [Int] = [0] { didSet {
 			arrayBoolean.value = true
 		}}
 
 		let optionalBoolean = BooleanContainer()
-		@ViewState var optional: CGRect? { didSet {
+		@ObservedValue var optional: CGRect? { didSet {
 			optionalBoolean.value = true
 		}}
 
 		let structBoolean = BooleanContainer()
-		@ViewState var structProperty = ViewModelProperty() { didSet {
+		@ObservedValue var structProperty = ViewModelProperty() { didSet {
 			structBoolean.value = true
 		}}
 	}
 
 	class SomeView {
-		@ViewModel var viewModel: SomeViewModel = SomeViewModel()
+		@ObservedState var viewModel: SomeViewModel = SomeViewModel()
 		func createSubview() -> SomeSubview {
 			SomeSubview(frame: $viewModel.frame, array: $viewModel.array, optionalFrame: $viewModel.optional)
 		}
@@ -98,7 +98,7 @@ final class ViewModelStateTests: XCTestCase {
 		let view = SomeView()
 		let bool = BooleanContainer()
 
-		view.viewModel.$optional.didChange(comparing: \.width) { newValue in
+		view.$viewModel.optional.didChange(comparing: \.width) { newValue in
 			bool.value = true
 		}.add(to: &observers)
 

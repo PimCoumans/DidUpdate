@@ -1,14 +1,14 @@
 import Foundation
 
-/// Adds a change observer to your model class, allowing subscriptions to changes in values annotated with `@ViewState`.
-/// See the ``ViewModel`` property wrapper for more info.
-public protocol StateContainer: AnyObject {
+/// Adds a change observer to your model class, allowing subscriptions to changes in values annotated with `@ObservedValue`.
+/// See the ``ObservedState`` property wrapper for more info.
+public protocol ObservableState: AnyObject {
 	/// Observer updated from `@ViewState` property wrappers
 	var changeObserver: StateContainerObserver { get }
 }
 
 private var changeObserverKey = "updateHandler"
-public extension StateContainer {
+public extension ObservableState {
 	private func newHandler() -> StateContainerObserver { .init() }
 
 	var changeObserver: StateContainerObserver {
