@@ -3,6 +3,15 @@ import SwiftUI
 import Combine
 import ViewModelState
 
+class BooleanContainer {
+	var value: Bool = false
+	func expect(_ expectedValue: Bool, operation: () -> Void) {
+		value = false
+		operation()
+		XCTAssertEqual(value, expectedValue, "⚠️ Boolean after operation not of expected value")
+	}
+}
+
 final class ViewModelStateTests: XCTestCase {
 
 	class SomeViewModel: StateContainer {
@@ -16,66 +25,63 @@ final class ViewModelStateTests: XCTestCase {
 			}
 		}
 
-		var calledFrameDidSet: Bool = false
-		var calledFrameChangeHandler: Bool = false
+		let frameBoolean = BooleanContainer()
 		@ViewState var frame: CGRect = .zero { didSet {
-			calledFrameDidSet = true
+			frameBoolean.value = true
 		}}
 
-		var calledArrayDidSet: Bool = false
-		var calledArrayChangeHandler: Bool = false
+		let arrayBoolean = BooleanContainer()
 		@ViewState var array: [Int] = [0] { didSet {
-			calledArrayDidSet = true
+			arrayBoolean.value = true
 		}}
 
-		var calledOptionalDidSet: Bool = false
-		var calledOptionalDidChangeHandler: Bool = false
-		var calledOptionalComparingDidChangeHandler: Bool = false
+		let optionalBoolean = BooleanContainer()
 		@ViewState var optional: CGRect? { didSet {
-			calledOptionalDidSet = true
+			optionalBoolean.value = true
 		}}
 
-		var calledStructDidSet: Bool = false
-		var calledStructDidChangeHandler: Bool = false
-		var calledStructComputedDidChangeHandler: Bool = false
+		let structBoolean = BooleanContainer()
 		@ViewState var structProperty = ViewModelProperty() { didSet {
-			calledStructDidSet = true
+			structBoolean.value = true
 		}}
-
-		var observers: [ViewStateObserver] = []
-		init() {
-			observers.add {
-				$frame.size.width.description.count.didChange { [unowned self] newValue in
-					self.calledArrayChangeHandler = true
-				}
-				$optional.didChange { [unowned self] newValue in
-					self.calledOptionalDidChangeHandler = true
-				}
-				$optional.didChange(comparing: \.width) { [unowned self] newValue in
-					self.calledOptionalComparingDidChangeHandler = true
-				}
-
-				$structProperty.didChange { [unowned self] newValue in
-					self.calledStructDidSet = true
-				}
-				$structProperty.computed.didChange { [unowned self] newValue in
-					self.calledStructComputedDidChangeHandler = true
-				}
-			}
-
-		}
 	}
 
 	class SomeView {
 		@ViewModel var viewModel: SomeViewModel = SomeViewModel()
+		func createSubview() -> SomeSubview {
+			SomeSubview(frame: $viewModel.frame, array: $viewModel.array, optionalFrame: $viewModel.optional)
+		}
 	}
 
 	class SomeSubview {
+		let frameBoolean = BooleanContainer()
 		@ValueProxy var frame: CGRect
-		@ValueProxy var cat: String
-		init(frame: ValueProxy<CGRect>, cat: ValueProxy<String>) {
+		let arrayBoolean = BooleanContainer()
+		@ValueProxy var array: [Int]
+		let optionalBoolean = BooleanContainer()
+		@ValueProxy var optional: CGRect?
+
+		var observers: [ViewStateObserver] = []
+		init(frame: ValueProxy<CGRect>, array: ValueProxy<[Int]>, optionalFrame: ValueProxy<CGRect?>) {
 			self._frame = frame
-			self._cat = cat
+			self._array = array
+			self._optional = optionalFrame
+
+			observers.add {
+				$frame.didChange { [weak self] newValue in
+					self?.frameBoolean.value = true
+				}
+				$array.didChange { [weak self] newValue in
+					self?.arrayBoolean.value = true
+				}
+				$optional.didChange { [weak self] newValue in
+					self?.optionalBoolean.value = true
+				}
+			}
+
+		}
+		func createSubview() -> SomeFurtherSubview {
+			SomeFurtherSubview(size: $frame.size)
 		}
 	}
 
@@ -90,13 +96,52 @@ final class ViewModelStateTests: XCTestCase {
 
 	func testOptionalObserving() {
 		let view = SomeView()
+		let bool = BooleanContainer()
+
 		view.viewModel.$optional.didChange(comparing: \.width) { newValue in
-			print("Width changed: \(String(describing: newValue?.width))")
+			bool.value = true
 		}.add(to: &observers)
-		view.viewModel.optional?.size.width = 2
-		view.viewModel.optional = .zero
-		view.viewModel.optional?.origin.y = 20
-		view.viewModel.optional = nil
+
+		bool.expect(false) { view.viewModel.optional?.size.width = 2 }
+		bool.expect(true) { view.viewModel.optional = .zero }
+		bool.expect(true) { view.viewModel.optional?.size.width = 2 }
+		bool.expect(false) { view.viewModel.optional?.size.width = 2 }
+		bool.expect(true) { view.viewModel.optional = nil }
+		observers.removeAll()
+	}
+
+	func testDidChangeHandler() {
+		let view = SomeView()
+		let bool = BooleanContainer()
+		view.viewModel.frame = .zero
+		let basicFrame = CGRect(x: 1, y: 2, width: 3, height: 4)
+
+		// Reuse same observer variable so active observer gets replaced
+		var observer = view.$viewModel.frame.didChange { newValue in
+			bool.value = true
+		}
+		_ = observer // hush little 'never read' warning
+		// Changed called when frame actually changed
+		bool.expect(true) { view.viewModel.frame = basicFrame }
+		// But not when set to the same value
+		bool.expect(false) { view.viewModel.frame = basicFrame }
+
+		observer = view.$viewModel.frame.didChange(compareEqual: false, handler: { newValue in
+			bool.value = true
+		})
+		// Change called when set to the same value
+		bool.expect(true) { view.viewModel.frame = basicFrame }
+		observer = view.$viewModel.frame.didChange(comparing: \.width, { newValue in
+			bool.value = true
+		})
+		// Change not called when origin is updated
+		bool.expect(false) { view.viewModel.frame.origin.x = 20 }
+		// Change called when width is updated
+		bool.expect(true) { view.viewModel.frame.size.width = 20 }
+	}
+
+	func testStateValueObservers() {
+		
 	}
 
 	class SomeObject: ObservableObject {
