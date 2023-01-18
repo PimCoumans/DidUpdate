@@ -10,12 +10,17 @@ class ViewModel: ObservableState {
 
 class MyView: UIView {
     @ObservedState var viewModel = ViewModel()
+    
     var observers: [StateValueObserver] = []
     
+    // Pass through values (like 'Binding')
+    lazy var someOtherView = OtherView(name: $viewModel.name)
+
     func setupView() {
-		let observer = $viewModel.name.didUpdate { [weak self] name in
-			print("Name updated: \(name)")
-		}.add(to: observers)
-	}
+        // Add a closure to be called when value is updated
+        let observer = $viewModel.name.didUpdate { [weak self] name in
+            print("Name updated: \(name)")
+        }.add(to: observers)
+    }
 }
 ```
