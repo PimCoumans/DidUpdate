@@ -4,7 +4,7 @@
 public struct ValueProxy<Value>: UpdateObservable {
 	let get: () -> Value
 	let set: (_ newValue: Value) -> ()
-	let changeHandler: (UpdateHandler<Value>) -> StateValueObserver
+	let updateHandler: (UpdateHandler<Value>) -> StateValueObserver
 
 	public var wrappedValue: Value {
 		get { get() }
@@ -23,7 +23,7 @@ public struct ValueProxy<Value>: UpdateObservable {
 
 extension ValueProxy {
 	public func addUpdateHandler(_ handler: UpdateHandler<Value>) -> Observer {
-		changeHandler(handler)
+		updateHandler(handler)
 	}
 }
 
@@ -32,8 +32,8 @@ extension ValueProxy {
 	init<RootValue>(_ proxy: ValueProxy<RootValue>, keyPath: WritableKeyPath<RootValue, Value>) {
 		self.get = { proxy.wrappedValue[keyPath: keyPath] }
 		self.set = { proxy.wrappedValue[keyPath: keyPath] = $0 }
-		self.changeHandler = { change in
-			proxy.changeHandler(change.passThrough(from: keyPath))
+		self.updateHandler = { update in
+			proxy.updateHandler(update.passThrough(from: keyPath))
 		}
 	}
 }

@@ -11,17 +11,17 @@ public struct ObservedValue<Value> {
 
 	@dynamicMemberLookup
 	public struct Observer: UpdateObservable {
-		let changeHandler: (_ handler: UpdateHandler<Value>) -> StateValueObserver
+		let updateHandler: (_ handler: UpdateHandler<Value>) -> StateValueObserver
 
 		public func addUpdateHandler(_ handler: UpdateHandler<Value>) -> StateValueObserver {
-			changeHandler(handler)
+			updateHandler(handler)
 		}
 
 		public subscript<Subject>(
 			dynamicMember keyPath: KeyPath<Value, Subject>
 		) -> ObservedValue<Subject>.Observer {
 			.init { handler in
-				changeHandler(handler.passThrough(from: keyPath))
+				updateHandler(handler.passThrough(from: keyPath))
 			}
 		}
 	}
@@ -33,8 +33,8 @@ public struct ObservedValue<Value> {
 		storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Self>
 	) -> Value {
 		get {
-			/// Ping change observer signaling value getter was intercepted by this property wrapper
-			/// For more details look into `expectPing()` in `StateChangeObserver`‘s implementation
+			/// Ping update observer signaling value getter was intercepted by this property wrapper
+			/// For more details look into `validateGetter()` in ``StateObserver``‘s implementation
 			instance.stateObserver.ping()
 			return instance[keyPath: storageKeyPath].storage
 		}
@@ -42,7 +42,7 @@ public struct ObservedValue<Value> {
 			let oldValue = instance[keyPath: storageKeyPath].storage
 			let update = StateUpdate.updated(old: oldValue, new: newValue)
 			instance[keyPath: storageKeyPath].storage = newValue
-			/// Notify ``ObservableState`` of change
+			/// Notify ``ObservableState`` of update
 			instance.notifyUpdate(update, at: wrappedKeyPath, from: storageKeyPath)
 		}
 	}
@@ -53,7 +53,7 @@ public struct ObservedValue<Value> {
 		storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Self>
 	) -> Observer {
 		get {
-			Observer(changeHandler: { instance.addObserver(keyPath: storageKeyPath, handler: $0) })
+			Observer(updateHandler: { instance.addObserver(keyPath: storageKeyPath, handler: $0) })
 		}
 	}
 

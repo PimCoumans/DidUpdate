@@ -1,4 +1,4 @@
-/// Enables change observation logic on any class conforming to``ObservableState`` and creates so-called 'value proxies' through its projected value (using the`$` prefix).
+/// Enables update observation logic on any class conforming to``ObservableState`` and creates so-called 'value proxies' through its projected value (using the`$` prefix).
 /// Relies on the ``ObservedValue`` property wrapper to update any observers, observing properties without this wrapper will log a warning (for now).
 ///
 /// To subscribe to updates from your view use:
@@ -34,8 +34,8 @@ public struct ObservedState<StateObject: ObservableState> {
 				set: { newValue in
 					object[keyPath: keyPath] = newValue
 				},
-				changeHandler: { changeHandler in
-					object.addObserver(keyPath: keyPath, handler: changeHandler)
+				updateHandler: { updateHandler in
+					object.addObserver(keyPath: keyPath, handler: updateHandler)
 				}
 			)
 		}
