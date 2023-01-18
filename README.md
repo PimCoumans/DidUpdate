@@ -29,7 +29,7 @@ class MyView: UIView {
         $viewModel.username.didChange(
             comparing: \.isEmpty,  // KeyPath to value to compare 
             withCurrent: true      // Let closure be called with current value
-		) { [weak self] username in
+        ) { [weak self] username in
             // Hide resetButton when username is empty
             self?.resetButton.isHidden = username.isEmpty
         }.add(to: &observers)
