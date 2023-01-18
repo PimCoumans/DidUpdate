@@ -5,36 +5,36 @@ _So, like `ObservableObject` but without any of that SwiftUI or Combine stuff_
 
 ```swift
 class MyViewModel: ObservableState {
-	@ObservedValue var username: String = "Hello"
+    @ObservedValue var username: String = "Hello"
 
-	func clearUsername() {
-		username = ""
-	}
+    func clearUsername() {
+        username = ""
+    }
 }
 
 class MyView: UIView {
-	@ObservedState var viewModel = MyViewModel()
+    @ObservedState var viewModel = MyViewModel()
 
-	var observers: [StateValueObserver] = []
+    var observers: [StateValueObserver] = []
 
-	lazy var usernameLabel = UILabel()
-	lazy var resetButton = UIButton(frame: .zero, primaryAction: UIAction { [unowned self] _ in
-		viewModel.clearUsername()
-	})
+    lazy var usernameLabel = UILabel()
+    lazy var resetButton = UIButton(frame: .zero, primaryAction: UIAction { [unowned self] _ in
+        viewModel.clearUsername()
+    })
 
-	func setupView() {
-		// Add a update handler to be called when username is updated
-		$viewModel.username.didUpdate { [weak self] name in
-			self?.usernameLabel.text = name
-		}.add(to: &observers)
+    func setupView() {
+        // Add a update handler to be called when username is updated
+        $viewModel.username.didUpdate { [weak self] name in
+            self?.usernameLabel.text = name
+        }.add(to: &observers)
 
-		// Add a update handler when username.isEmpty has changed (using Equatable)
-		// Let handler be called immediately with current value by using `withCurrent: true`
-		$viewModel.username.didChange(comparing: \.isEmpty, withCurrent: true) { [weak self] username in
-			// Hide resetButton when username is empty
-			self?.resetButton.isHidden = username.isEmpty
-		}.add(to: &observers)
-	}
+        // Add a update handler when username.isEmpty has changed (using Equatable)
+        // Let handler be called immediately with current value by using `withCurrent: true`
+        $viewModel.username.didChange(comparing: \.isEmpty, withCurrent: true) { [weak self] username in
+            // Hide resetButton when username is empty
+            self?.resetButton.isHidden = username.isEmpty
+        }.add(to: &observers)
+    }
 }
 ```
 
