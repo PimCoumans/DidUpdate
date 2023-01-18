@@ -1,6 +1,4 @@
 import XCTest
-import SwiftUI
-import Combine
 import DidUpdate
 
 class BooleanContainer {
@@ -181,45 +179,5 @@ final class ViewModelStateTests: XCTestCase {
 				bool.value = true
 			})
 		}
-	}
-
-	class SomeObject: ObservableObject {
-		@Published var frame: CGRect = .zero {
-			didSet {
-				print("FRAME UPDATED: \(frame)")
-			}
-		}
-		@Published var optionalFrame: CGRect? = nil { didSet {
-			print("Optional frame updated: \(String(describing: optionalFrame))")
-		}}
-	}
-
-	class SwiftUIView {
-		@ObservedObject var viewModel = SomeObject()
-	}
-
-	class OtherSwiftUIView {
-		@Binding var size: CGSize
-		@Binding var frame: CGRect?
-		init(size: Binding<CGSize>, frame: Binding<CGRect?>) {
-			_size = size
-			_frame = frame
-		}
-	}
-
-	var cancellables: [AnyCancellable] = []
-
-	func testSwiftUIExample() throws {
-		let view = SwiftUIView()
-		view.viewModel.$frame.sink { frame in
-			print("Frame publisher: \(frame)")
-		}.store(in: &cancellables)
-
-		view.viewModel.$optionalFrame.sink { frame in
-			print("Optional frame publisher: \(String(describing: frame))")
-		}.store(in: &cancellables)
-		let otherView = OtherSwiftUIView(size: view.$viewModel.frame.size, frame: view.$viewModel.optionalFrame)
-		otherView.size.width = 20
-		otherView.frame = CGRect(x: 1, y: 2, width: 3, height: 4)
 	}
 }
