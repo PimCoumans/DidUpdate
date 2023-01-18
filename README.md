@@ -1,3 +1,3 @@
 # DidUpdate
 
-`ObservableObject` without SwiftUI or Combine
+SwiftUI inspired State observing without SwiftUI
