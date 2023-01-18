@@ -42,6 +42,8 @@ class MyView: UIView {
 To add this dependency to your Xcode project, select File -> Add Package and enter this repository's URL: `https://github.com/PimCoumans/DidUpdate`
 
 ## But, why?
-I love SwiftUI, but for now I feel more comfortable using plain old UIKit for the more complex parts of my apps. I **do** love how SwiftUI lets you define state and have it automatically update all your views when anything changes. I wanted _that_, but not with the overhead of importing SwiftUI or Combine and using a bunch of Publisher, or learning a whole new reactive library.
+I love SwiftUI, but for now I feel more comfortable using plain old UIKit for the more complex parts of my apps. I **do** love how SwiftUI lets you define state and have it automatically update all your views when anything changes. I wanted _that_, but not with the overhead of importing SwiftUI or Combine and using a bunch of publishers, or learning a whole new reactive library.
 
-So I over-reverse-engineered the parts I liked and introduced the ability to add update handlers to your bindings (`ObservedValue` in DidUpdate land).
+So I reverse-over-engineered the parts I liked and introduced the ability to add update handlers to your bindings (`ObservedValue` in DidUpdate land).
+
+Now you can have a reactive-ish architecture for you UIKit views too!
