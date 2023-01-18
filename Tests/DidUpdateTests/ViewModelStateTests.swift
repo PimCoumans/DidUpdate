@@ -1,7 +1,7 @@
 import XCTest
 import SwiftUI
 import Combine
-import ViewModelState
+import DidUpdate
 
 class BooleanContainer {
 	var value: Bool = false
