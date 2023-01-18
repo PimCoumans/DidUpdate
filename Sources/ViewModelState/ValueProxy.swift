@@ -1,5 +1,5 @@
 /// Forwards value getting and setting to its originating ``ObservableState`` class, wrapped by a ``ObservedState`` property wrapper,
-/// and provides the functionality to subscribe to value updates through methods like ``UpdateObservable/didChange(withCurrent:handler:)-3mf14``
+/// and provides the functionality to subscribe to value updates through methods like ``UpdateObservable/didUpdate(withCurrent:handler:)-3mf14``
 @propertyWrapper @dynamicMemberLookup
 public struct ValueProxy<Value>: UpdateObservable {
 	let get: () -> Value

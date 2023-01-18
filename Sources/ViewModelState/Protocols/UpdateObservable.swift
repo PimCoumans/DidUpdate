@@ -54,7 +54,7 @@ public protocol UpdateObservable {
 
 	/// Not to be called directly, but rather implemented by types conforming to `UpdateObservable`.
 	/// Implement this method to create a ``StateValueObserver`` with the provided ``UpdateHandler``
-	/// - Parameter handler: Update handler, properly configured through one of the `didChange` methods
+	/// - Parameter handler: Update handler, properly configured through one of the `didUpdate` methods
 	/// - Returns: Newly created ``StateValueObserver`` that calls the provide update handler
 	func addUpdateHandler(_ handler: UpdateHandler<Value>) -> Observer
 }
@@ -70,7 +70,7 @@ public extension UpdateObservable {
 	///   - provideLatestValue: Wether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing just the new value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
-	func didChange(withCurrent provideCurrent: Bool = false, handler: @escaping DidUpdateHandler) -> Observer {
+	func didUpdate(withCurrent provideCurrent: Bool = false, handler: @escaping DidUpdateHandler) -> Observer {
 		addUpdateHandler(.init(
 			updateWithCurrent: provideCurrent,
 			handler: { _, new, _ in handler(new) }
@@ -82,7 +82,7 @@ public extension UpdateObservable {
 	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
-	func didChange(withCurrent provideCurrent: Bool = false, handler: @escaping FullDidUpdateHandler) -> Observer {
+	func didUpdate(withCurrent provideCurrent: Bool = false, handler: @escaping FullDidUpdateHandler) -> Observer {
 		addUpdateHandler(.init(
 			updateWithCurrent: provideCurrent,
 			handler: handler
@@ -91,35 +91,33 @@ public extension UpdateObservable {
 }
 
 public extension UpdateObservable where Value: Equatable {
-	/// Adds an update handler called whenever the observed value updates
+	/// Adds an update handler called whenever the observed value has changed, comparing old and new value
 	/// - Parameters:
 	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing just the new value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
 	func didChange(
 		withCurrent provideCurrent: Bool = false,
-		compareEqual: Bool = true,
 		handler: @escaping DidUpdateHandler
 	) -> Observer {
 		addUpdateHandler(.init(
-			compareEquality: compareEqual,
+			compareEquality: true,
 			updateWithCurrent: provideCurrent,
 			handler: { _, new, _ in handler(new) }
 		))
 	}
 
-	/// Adds an update handler called whenever the observed value updates
+	/// Adds an update handler called whenever the observed value has changed, comparing old and new value
 	/// - Parameters:
 	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
 	func didChange(
 		withCurrent provideCurrent: Bool = false,
-		compareEqual: Bool = true,
 		handler: @escaping FullDidUpdateHandler
 	) -> Observer {
 		addUpdateHandler(.init(
-			compareEquality: compareEqual,
+			compareEquality: true,
 			updateWithCurrent: provideCurrent,
 			handler: handler
 		))
@@ -179,7 +177,7 @@ extension StateUpdate where Value: ExpressibleByNilLiteral {
 }
 
 public extension UpdateObservable where Value: ExpressibleByNilLiteral {
-	/// Adds an update handler called whenever the observed value updates at the provided keyPath, with keyPath pointing to unwrapped value
+	/// Adds an update handler called whenever the observed value has changed at the provided keyPath, with keyPath pointing to unwrapped value
 	/// so it does not need to be composed with a preceding `.?.`
 	/// - Parameters:
 	///   - keyPath: KeyPath to value to compare, making sure the update handler is only executed when value changed
@@ -198,7 +196,7 @@ public extension UpdateObservable where Value: ExpressibleByNilLiteral {
 		))
 	}
 
-	/// Adds an update handler called whenever the observed value updates at the provided keyPath, with keyPath pointing to unwrapped value
+	/// Adds an update handler called whenever the observed value has changed at the provided keyPath, with keyPath pointing to unwrapped value
 	/// so it does not need to be composed with a preceding `.?.`
 	/// - Parameters:
 	///   - keyPath: KeyPath to value to compare, making sure the update handler is only executed when value changed
@@ -219,7 +217,7 @@ public extension UpdateObservable where Value: ExpressibleByNilLiteral {
 }
 
 public extension UpdateObservable {
-	/// Adds an update handler called whenever the observed value updates at the provided keyPath
+	/// Adds an update handler called whenever the observed value has changed at the provided keyPath
 	/// - Parameters:
 	///   - keyPath: KeyPath to value to compare, making sure the update handler is only executed when value changed
 	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
@@ -237,7 +235,7 @@ public extension UpdateObservable {
 		))
 	}
 
-	/// Adds an update handler called whenever the observed value updates at the provided keyPath
+	/// Adds an update handler called whenever the observed value has changed at the provided keyPath
 	/// - Parameters:
 	///   - keyPath: KeyPath to value to compare, making sure the update handler is only executed when value changed
 	///   - provideCurrent: Wether the provided closure should be called immediately with the current value

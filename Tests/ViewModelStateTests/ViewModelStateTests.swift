@@ -126,7 +126,7 @@ final class ViewModelStateTests: XCTestCase {
 		// But not when set to the same value
 		bool.expect(false) { view.viewModel.frame = basicFrame }
 
-		observer = view.$viewModel.frame.didChange(compareEqual: false, handler: { newValue in
+		observer = view.$viewModel.frame.didUpdate(handler: { newValue in
 			bool.value = true
 		})
 		// Update called when set to the same value
@@ -163,7 +163,7 @@ final class ViewModelStateTests: XCTestCase {
 		// But not when set to the same value
 		bool.expect(false) { view.viewModel.frame = basicFrame }
 
-		observer = view.viewModel.$frame.didChange(compareEqual: false, handler: { newValue in
+		observer = view.viewModel.$frame.didUpdate(handler: { newValue in
 			bool.value = true
 		})
 		// Update called when set to the same value

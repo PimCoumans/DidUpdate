@@ -3,14 +3,14 @@
 ///
 /// To subscribe to updates from your view use:
 /// ```
-/// $viewModel.yourValue.didChange { [weak self] newValue in
+/// $viewModel.yourValue.didUpdate { [weak self] newValue in
 ///    print("yourValue did update: \(newValue)")
 /// }
 /// ```
 /// or from within your model class:
 /// ```
 /// init() {
-///     $yourValue.didChange { [unowned self] newValue in
+///     $yourValue.didUpdate { [unowned self] newValue in
 ///         print("yourValue did update: \(newValue)")
 ///     }
 /// }
