@@ -1,6 +1,7 @@
 # DidUpdate
+> SwiftUI inspired State observing without SwiftUI
 
-`ObservableObject` but without any of that SwiftUI or Combine stuff
+So, like `ObservableObject` but without any of that SwiftUI or Combine stuff
 
 ```swift
 class ViewModel: ObservableState {
