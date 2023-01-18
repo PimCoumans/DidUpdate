@@ -1,22 +1,22 @@
 import Foundation
 
-/// Adds a change observer to your model class, allowing subscriptions to changes in values annotated with `@ObservedValue`.
+/// Adds an update observer to your model class, allowing subscriptions to update in values annotated with `@ObservedValue`.
 /// See the ``ObservedState`` property wrapper for more info.
 public protocol ObservableState: AnyObject {
 	/// Observer updated from `@ViewState` property wrappers
-	var changeObserver: StateContainerObserver { get }
+	var stateObserver: StateObserver { get }
 }
 
-private var changeObserverKey = "updateHandler"
+private var stateObserverKey = "ObservableStateObserver"
 public extension ObservableState {
-	private func newHandler() -> StateContainerObserver { .init() }
+	private func newObserver() -> StateObserver { .init() }
 
-	var changeObserver: StateContainerObserver {
-		if let handler = objc_getAssociatedObject(self, &changeObserverKey) as? StateContainerObserver {
+	var stateObserver: StateObserver {
+		if let handler = objc_getAssociatedObject(self, &stateObserverKey) as? StateObserver {
 			return handler
 		}
-		let handler = newHandler()
-		objc_setAssociatedObject(self, &changeObserverKey, handler, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+		let handler = newObserver()
+		objc_setAssociatedObject(self, &stateObserverKey, handler, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
 		return handler
 	}
 }

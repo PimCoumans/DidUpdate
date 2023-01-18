@@ -1,6 +1,6 @@
 /// Available to properties on classes conforming to ``ObservableState``.
-/// `ObservedValue` makes sure that change handlers created through``ChangeObservable/didChange(withCurrent:handler:)-3mf14``
-/// will be called with the  changes intercepted by this property wrapper.
+/// `ObservedValue` makes sure that update handlers created through``UpdateObservable/didChange(withCurrent:handler:)-3mf14``
+/// will be called with the updates intercepted by this property wrapper.
 @propertyWrapper
 public struct ObservedValue<Value> {
 
@@ -10,10 +10,10 @@ public struct ObservedValue<Value> {
 	}
 
 	@dynamicMemberLookup
-	public struct Observer: ChangeObservable {
-		let changeHandler: (_ handler: ChangeHandler<Value>) -> ViewStateObserver
+	public struct Observer: UpdateObservable {
+		let changeHandler: (_ handler: UpdateHandler<Value>) -> StateValueObserver
 
-		public func addChangeHandler(_ handler: ChangeHandler<Value>) -> ViewStateObserver {
+		public func addUpdateHandler(_ handler: UpdateHandler<Value>) -> StateValueObserver {
 			changeHandler(handler)
 		}
 
@@ -26,7 +26,7 @@ public struct ObservedValue<Value> {
 		}
 	}
 
-	/// Updates  the enclosing ``ObservableState``'s ``StateContainerObserver`` whenever the value is changed
+	/// Updates  the enclosing ``ObservableState``'s ``StateObserver`` whenever the value is changed
 	public static subscript<EnclosingSelf: ObservableState>(
 		_enclosingInstance instance: EnclosingSelf,
 		wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Value>,
@@ -35,14 +35,15 @@ public struct ObservedValue<Value> {
 		get {
 			/// Ping change observer signaling value getter was intercepted by this property wrapper
 			/// For more details look into `expectPing()` in `StateChangeObserver`‘s implementation
-			instance.changeObserver.ping()
+			instance.stateObserver.ping()
 			return instance[keyPath: storageKeyPath].storage
 		}
 		set {
 			let oldValue = instance[keyPath: storageKeyPath].storage
+			let update = StateUpdate.updated(old: oldValue, new: newValue)
 			instance[keyPath: storageKeyPath].storage = newValue
-			/// Notify `StateContainer` of change
-			instance.notifyChange(at: wrappedKeyPath, from: storageKeyPath, from: oldValue, to: newValue)
+			/// Notify ``ObservableState`` of change
+			instance.notifyUpdate(update, at: wrappedKeyPath, from: storageKeyPath)
 		}
 	}
 

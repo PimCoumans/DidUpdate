@@ -1,17 +1,17 @@
 /// Enables change observation logic on any class conforming to``ObservableState`` and creates so-called 'value proxies' through its projected value (using the`$` prefix).
 /// Relies on the ``ObservedValue`` property wrapper to update any observers, observing properties without this wrapper will log a warning (for now).
 ///
-/// To subscribe to changes from your view use:
+/// To subscribe to updates from your view use:
 /// ```
 /// $viewModel.yourValue.didChange { [weak self] newValue in
-///    print("yourValue changed: \(newValue)")
+///    print("yourValue did update: \(newValue)")
 /// }
 /// ```
 /// or from within your model class:
 /// ```
 /// init() {
 ///     $yourValue.didChange { [unowned self] newValue in
-///         print("yourValue changed: \(newValue)")
+///         print("yourValue did update: \(newValue)")
 ///     }
 /// }
 /// ```

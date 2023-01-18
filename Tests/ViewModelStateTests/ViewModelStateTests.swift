@@ -61,7 +61,7 @@ final class ViewModelStateTests: XCTestCase {
 		let optionalBoolean = BooleanContainer()
 		@ValueProxy var optional: CGRect?
 
-		var observers: [ViewStateObserver] = []
+		var observers: [StateValueObserver] = []
 		init(frame: ValueProxy<CGRect>, array: ValueProxy<[Int]>, optionalFrame: ValueProxy<CGRect?>) {
 			self._frame = frame
 			self._array = array
@@ -92,7 +92,7 @@ final class ViewModelStateTests: XCTestCase {
 		}
 	}
 
-	var observers: [ViewStateObserver] = []
+	var observers: [StateValueObserver] = []
 
 	func testOptionalObserving() {
 		let view = SomeView()
@@ -121,7 +121,7 @@ final class ViewModelStateTests: XCTestCase {
 			bool.value = true
 		}
 		_ = observer // hush little 'never read' warning
-		// Changed called when frame actually changed
+		// Update called when frame actually changed
 		bool.expect(true) { view.viewModel.frame = basicFrame }
 		// But not when set to the same value
 		bool.expect(false) { view.viewModel.frame = basicFrame }
@@ -129,16 +129,16 @@ final class ViewModelStateTests: XCTestCase {
 		observer = view.$viewModel.frame.didChange(compareEqual: false, handler: { newValue in
 			bool.value = true
 		})
-		// Change called when set to the same value
+		// Update called when set to the same value
 		bool.expect(true) { view.viewModel.frame = basicFrame }
 		observer = view.$viewModel.frame.didChange(comparing: \.width, { newValue in
 			bool.value = true
 		})
-		// Change not called when origin is updated
+		// Update not called when origin is updated
 		bool.expect(false) { view.viewModel.frame.origin.x = 20 }
-		// Change called when width is updated
+		// Update called when width is updated
 		bool.expect(true) { view.viewModel.frame.size.width = 20 }
-		// Change called immediately with current value
+		// Update called immediately with current value
 		bool.expect(true) {
 			observer = view.$viewModel.frame.didChange(withCurrent: true, handler: { newValue in
 				bool.value = true
@@ -158,7 +158,7 @@ final class ViewModelStateTests: XCTestCase {
 			bool.value = true
 		}
 		_ = observer // hush little 'never read' warning
-		// Changed called when frame actually changed
+		// Update called when frame actually changed
 		bool.expect(true) { view.viewModel.frame = basicFrame }
 		// But not when set to the same value
 		bool.expect(false) { view.viewModel.frame = basicFrame }
@@ -166,16 +166,16 @@ final class ViewModelStateTests: XCTestCase {
 		observer = view.viewModel.$frame.didChange(compareEqual: false, handler: { newValue in
 			bool.value = true
 		})
-		// Change called when set to the same value
+		// Update called when set to the same value
 		bool.expect(true) { view.viewModel.frame = basicFrame }
 		observer = view.viewModel.$frame.didChange(comparing: \.width, { newValue in
 			bool.value = true
 		})
-		// Change not called when origin is updated
+		// Update not called when origin is updated
 		bool.expect(false) { view.viewModel.frame.origin.x = 20 }
-		// Change called when width is updated
+		// Update called when width is updated
 		bool.expect(true) { view.viewModel.frame.size.width = 20 }
-		// Change called immediately with current value
+		// Update called immediately with current value
 		bool.expect(true) {
 			observer = view.viewModel.$frame.didChange(withCurrent: true, handler: { newValue in
 				bool.value = true
@@ -186,11 +186,11 @@ final class ViewModelStateTests: XCTestCase {
 	class SomeObject: ObservableObject {
 		@Published var frame: CGRect = .zero {
 			didSet {
-				print("FRAME CHANGED: \(frame)")
+				print("FRAME UPDATED: \(frame)")
 			}
 		}
 		@Published var optionalFrame: CGRect? = nil { didSet {
-			print("Optional frame changed: \(String(describing: optionalFrame))")
+			print("Optional frame updated: \(String(describing: optionalFrame))")
 		}}
 	}
 
