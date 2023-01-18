@@ -1,3 +1,3 @@
-# ViewModelState
+# DidUpdate
 
-A description of this package.
+`ObservableObject` without SwiftUI or Combine

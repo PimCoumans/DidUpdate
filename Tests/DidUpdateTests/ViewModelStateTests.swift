@@ -110,7 +110,7 @@ final class ViewModelStateTests: XCTestCase {
 		observers.removeAll()
 	}
 
-	func testDidChangeHandler() {
+	func testUpdateHandlers() {
 		let view = SomeView()
 		let bool = BooleanContainer()
 		view.viewModel.frame = .zero
