@@ -1,5 +1,5 @@
 # DidUpdate
-SwiftUI inspired State observing without SwiftUI
+SwiftUI inspired state observing without SwiftUI
 
 _So, like `ObservableObject` but without any of that SwiftUI or Combine stuff_
 
@@ -28,10 +28,6 @@ class MyView: UIView {
             self.addSubview(minusButton)
             self.addSubview(plusButton)
         }
-
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
     }
 
     @ObservedState var viewModel = ViewModel()
@@ -50,23 +46,24 @@ class MyView: UIView {
     }
 }
 ```
+*(basic counter sample code demonstrating updating a `ValueProxy` and `didUpdate` logic)*
 
-## Installation
+## 📦 Installation
 To add this dependency to your Xcode project, select File -> Add Package and enter this repository's URL: `https://github.com/PimCoumans/DidUpdate`
 
-## But, why?
+## 🤷 But, why?
 I love SwiftUI, but for now I feel more comfortable using plain old UIKit for the more complex parts of my apps. I **do** love how SwiftUI lets you define state and have it automatically update all your views when anything changes. I wanted _that_, but not with the overhead of importing SwiftUI or Combine and using a bunch of publishers, or learning a whole new reactive library.
 
 So I reverse-over-engineered the parts I liked and introduced the ability to add update handlers to your bindings (`ObservedValue` in DidUpdate land).
 
 Now you can have a tiny reactive-ish architecture for you UIKit views too!
 
-## What does it do exactly?
+## ↔️ What does it do exactly?
 The two main features are
 - Tell you when a specific property in your model class has been updated, and when it conforms to `Equatable` even when its value was actually changed.
 - Pass along two-way binding property wrappers that can update properties on your model class, making sure its `didSet { }` is called as well. It‘s also possible to create bindings to nested properties using KeyPath subscripts (like `$viewModel.someFrame.size.width`).
 
-## How can I do this?
+## ✨ How can I do this?
 To enable this magic, make sure your model object conforms to `ObservableState` and hold onto it using the `@ObservedState` property wrapper in your view (controller). For all your model‘s properties use `@ObservedValue` when you want these to be observable.
 
 ### Handling updates/changes
