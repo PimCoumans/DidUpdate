@@ -131,7 +131,7 @@ internal extension StateObserver {
 
 		let id: UUID
 		let keyPath: AnyKeyPath
-		let observer: () -> (any UpdateHandleable)?
+		let observer: () -> UpdateHandleable?
 
 		init<Value>(_ observer: Observer<Value>) {
 			self.id = observer.id
