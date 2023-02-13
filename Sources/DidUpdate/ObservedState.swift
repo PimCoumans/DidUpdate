@@ -43,6 +43,10 @@ public struct ObservedState<StateObject: ObservableState> {
 
 	private var observableValues: ObservableValues
 
+	public init(_ stateObject: StateObject) {
+		observableValues = ObservableValues(observing: stateObject)
+	}
+
 	public init(wrappedValue: StateObject) {
 		observableValues = ObservableValues(observing: wrappedValue)
 	}
