@@ -14,7 +14,7 @@ public class StateObserver {
 	}
 
 	/// Logs a warning when getter of property at given keyPath isn‘t wrapped by ``ObservedValue``, so update handler would never be called
-	/// Does not attempt to cast result to `Value`, instead also accepts when result is a `ObservedValue` itself
+	/// Does not attempt to cast result to `Value`, instead also accepts when result is an `ObservedValue` itself
 	fileprivate func validateGetter<Value>(for keyPath: AnyKeyPath, expecting: Value.Type, getter: () -> Any) {
 		guard !validatedObservedValues.contains(keyPath) else {
 			return
