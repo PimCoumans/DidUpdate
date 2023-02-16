@@ -21,36 +21,36 @@ public struct ObservedState<StateObject: ObservableState> {
 	/// Creates `ValueProxy` structs to forward getting and setting of values and allow adding observers for specific keyPaths
 	@dynamicMemberLookup
 	public struct ObservableValues {
-		fileprivate var object: StateObject
-		public init(observing: StateObject) {
-			self.object = observing
+		fileprivate var stateObject: () -> StateObject
+		public init(observing: @autoclosure @escaping () -> StateObject) {
+			self.stateObject = observing
 		}
 
 		public subscript<Value>(
 			dynamicMember keyPath: ReferenceWritableKeyPath<StateObject, Value>
 		) -> ValueProxy<Value> {
 			ValueProxy(
-				get: { object[keyPath: keyPath]},
+				get: { stateObject()[keyPath: keyPath]},
 				set: { newValue in
-					object[keyPath: keyPath] = newValue
+					stateObject()[keyPath: keyPath] = newValue
 				},
 				updateHandler: { updateHandler in
-					object.addObserver(keyPath: keyPath, handler: updateHandler)
+					stateObject().addObserver(keyPath: keyPath, handler: updateHandler)
 				}
 			)
 		}
 	}
 
-	private var observableValues: ObservableValues
+	public var wrappedValue: StateObject
+	public var projectedValue: ObservableValues {
+		ObservableValues(observing: wrappedValue)
+	}
 
 	public init(_ stateObject: StateObject) {
-		observableValues = ObservableValues(observing: stateObject)
+		wrappedValue = stateObject
 	}
 
 	public init(wrappedValue: StateObject) {
-		observableValues = ObservableValues(observing: wrappedValue)
+		self.wrappedValue = wrappedValue
 	}
-
-	public var wrappedValue: StateObject { observableValues.object }
-	public var projectedValue: ObservableValues { observableValues }
 }
