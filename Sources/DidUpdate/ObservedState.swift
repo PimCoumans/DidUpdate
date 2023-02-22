@@ -29,15 +29,7 @@ public struct ObservedState<StateObject: ObservableState> {
 		public subscript<Value>(
 			dynamicMember keyPath: ReferenceWritableKeyPath<StateObject, Value>
 		) -> ValueProxy<Value> {
-			ValueProxy(
-				get: { stateObject()[keyPath: keyPath]},
-				set: { newValue in
-					stateObject()[keyPath: keyPath] = newValue
-				},
-				updateHandler: { updateHandler in
-					stateObject().addObserver(keyPath: keyPath, handler: updateHandler)
-				}
-			)
+			stateObject().valueProxy(from: keyPath)
 		}
 	}
 
