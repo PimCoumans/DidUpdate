@@ -37,9 +37,10 @@ public struct ObservedValue<Value> {
 		storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Self>
 	) -> ReadOnlyProxy<Value> {
 		get {
-			let storage = instance[keyPath: storageKeyPath]
 			return ReadOnlyProxy(
-				get: { storage.storage },
+				get: {
+					instance[keyPath: storageKeyPath].storage
+				},
 				updateHandler: { instance.addObserver(keyPath: storageKeyPath, handler: $0) }
 			)
 		}
