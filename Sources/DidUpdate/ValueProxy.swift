@@ -11,7 +11,7 @@ public struct ValueProxy<Value>: UpdateObservable {
 		nonmutating set { set(newValue) }
 	}
 
-	/// Use the `$` syntax to access the `ValueProxy` itself to add update handlers or pass it on to other views, optionally appending any sub values through dynamic member lookup
+	/// Use the `$` syntax to access the `ValueProxy` itself to add update handlers or pass it on to other views, optionally appending any child values through dynamic member lookup
 	public var projectedValue: Self { self }
 
 	public subscript<Subject>(

@@ -3,14 +3,15 @@
 @propertyWrapper @dynamicMemberLookup
 public struct ReadOnlyProxy<Value>: UpdateObservable {
 	let get: () -> Value
-	//	let set: (_ newValue: Value) -> ()
 	let updateHandler: (UpdateHandler<Value>) -> StateValueObserver
 
 	public var wrappedValue: Value {
-		get { get() }
+		get {
+			get()
+		}
 	}
 
-	/// Use the `$` syntax to access the `ValueProxy` itself to add update handlers or pass it on to other views, optionally appending any sub values through dynamic member lookup
+	/// Use the `$` syntax to access the `ReadOnlyValueProxy` itself to add update handlers or pass it on to other views, optionally appending any child values through dynamic member lookup
 	public var projectedValue: Self { self }
 
 	public subscript<Subject>(
@@ -27,9 +28,11 @@ extension ReadOnlyProxy {
 }
 
 extension ReadOnlyProxy {
-	/// Creates a new ValueProxy from an existing proxy,  applying the provided keyPath to its value and `StateUpdate`
+	/// Creates a new ReadOnlyProxy from an existing proxy,  applying the provided keyPath to its value and `StateUpdate`
 	init<RootValue>(_ proxy: ReadOnlyProxy<RootValue>, keyPath: KeyPath<RootValue, Value>) {
-		self.get = { proxy.wrappedValue[keyPath: keyPath] }
+		self.get = {
+			proxy.wrappedValue[keyPath: keyPath]
+		}
 		self.updateHandler = { update in
 			proxy.updateHandler(update.passThrough(from: keyPath))
 		}
