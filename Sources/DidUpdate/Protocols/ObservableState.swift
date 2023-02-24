@@ -7,6 +7,21 @@ public protocol ObservableState: AnyObject {
 	var stateObserver: StateObserver { get }
 }
 
+/// Creates `ValueProxy` structs to forward getting and setting of values and allow adding observers for specific keyPaths
+@dynamicMemberLookup
+public struct ObservableValues<StateObject: ObservableState> {
+	fileprivate var stateObject: () -> StateObject
+	public init(observing: @autoclosure @escaping () -> StateObject) {
+		self.stateObject = observing
+	}
+
+	public subscript<Value>(
+		dynamicMember keyPath: ReferenceWritableKeyPath<StateObject, Value>
+	) -> ValueProxy<Value> {
+		stateObject().valueProxy(from: keyPath)
+	}
+}
+
 private var stateObserverKey = "ObservableStateObserver"
 public extension ObservableState {
 	private func newObserver() -> StateObserver { .init() }
@@ -21,9 +36,9 @@ public extension ObservableState {
 	}
 
 	/// Wrapper to create local proxies using dynamic member subscripts
-	/// - Returns: ``ObservedState/ObservableValues`` struct pointing to self
-	var valueProxies: ObservedState<Self>.ObservableValues {
-		ObservedState<Self>.ObservableValues(observing: self)
+	/// - Returns: ``ObservableValues`` struct pointing to wrapping self
+	var observableValues: ObservableValues<Self> {
+		ObservableValues(observing: self)
 	}
 
 	internal func valueProxy<Value>(from keyPath: ReferenceWritableKeyPath<Self, Value>) -> ValueProxy<Value> {
