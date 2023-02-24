@@ -9,23 +9,6 @@ public struct ObservedValue<Value> {
 		self.storage = wrappedValue
 	}
 
-	@dynamicMemberLookup
-	public struct Observer: UpdateObservable {
-		let updateHandler: (_ handler: UpdateHandler<Value>) -> StateValueObserver
-
-		public func addUpdateHandler(_ handler: UpdateHandler<Value>) -> StateValueObserver {
-			updateHandler(handler)
-		}
-
-		public subscript<Subject>(
-			dynamicMember keyPath: KeyPath<Value, Subject>
-		) -> ObservedValue<Subject>.Observer {
-			.init { handler in
-				updateHandler(handler.passThrough(from: keyPath))
-			}
-		}
-	}
-
 	/// Updates  the enclosing ``ObservableState``'s ``StateObserver`` whenever the value is changed
 	public static subscript<EnclosingSelf: ObservableState>(
 		_enclosingInstance instance: EnclosingSelf,
@@ -47,13 +30,18 @@ public struct ObservedValue<Value> {
 		}
 	}
 
+	/// Creates a read only proxy to the ``ObservedValue``‘s current value and allows adding update handlers
 	public static subscript<EnclosingSelf: ObservableState>(
 		_enclosingInstance instance: EnclosingSelf,
-		projected projectedKeyPath: KeyPath<EnclosingSelf, Observer>,
+		projected projectedKeyPath: KeyPath<EnclosingSelf, ReadOnlyProxy<Value>>,
 		storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Self>
-	) -> Observer {
+	) -> ReadOnlyProxy<Value> {
 		get {
-			Observer(updateHandler: { instance.addObserver(keyPath: storageKeyPath, handler: $0) })
+			let storage = instance[keyPath: storageKeyPath]
+			return ReadOnlyProxy(
+				get: { storage.storage },
+				updateHandler: { instance.addObserver(keyPath: storageKeyPath, handler: $0) }
+			)
 		}
 	}
 
@@ -68,7 +56,7 @@ public struct ObservedValue<Value> {
 	@available(
 		*, unavailable,
 		 message: "This property wrapper can only be applied to properties of classes conforming to StateContainer")
-	public var projectedValue: Observer {
+	public var projectedValue: ReadOnlyProxy<Value> {
 		fatalError()
 	}
 }
