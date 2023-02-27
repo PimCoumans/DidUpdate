@@ -48,7 +48,7 @@ extension UpdateHandler {
 }
 
 /// Methods for adding update handlers to state container values through methods providing just a closure
-public protocol UpdateObservable {
+public protocol UpdateObservable<Value> {
 	associatedtype Value
 	typealias Observer = StateValueObserver
 
