@@ -13,7 +13,25 @@ public struct UpdateHandler<Value> {
 }
 
 extension UpdateHandler {
+	typealias DidUpdateHandler = (_ newValue: Value) -> Void
 	typealias FullDidUpdateHandler = (_ oldValue: Value, _ newValue: Value, _ isCurrent: Bool) -> Void
+	/// Convenience initializer converting a ``StateUpdate`` to a ``UpdateObservable/DidUpdateHandler``
+	init(
+		shouldHandleUpdate: ((_ update: StateUpdate<Value>) -> Bool)? = nil,
+		updateWithCurrent: Bool = false,
+		handler : @escaping DidUpdateHandler
+	) {
+		self.shouldHandleUpdate = shouldHandleUpdate
+		self.updateWithCurrentValue = updateWithCurrent
+		self.handler = { update in
+			switch update {
+			case .current(let value):
+				handler(value)
+			case .updated(_, let new):
+				handler(new)
+			}
+		}
+	}
 	/// Convenience initializer converting a ``StateUpdate`` to a ``UpdateObservable/DidUpdateHandler``
 	init(
 		shouldHandleUpdate: ((_ update: StateUpdate<Value>) -> Bool)? = nil,
@@ -73,7 +91,7 @@ extension UpdateObservable {
 	public func didUpdate(withCurrent provideCurrent: Bool = false, handler: @escaping DidUpdateHandler) -> Observer {
 		addUpdateHandler(.init(
 			updateWithCurrent: provideCurrent,
-			handler: { _, new, _ in handler(new) }
+			handler: handler
 		))
 	}
 
@@ -103,7 +121,7 @@ extension UpdateObservable where Value: Equatable {
 		addUpdateHandler(.init(
 			compareEquality: true,
 			updateWithCurrent: provideCurrent,
-			handler: { _, new, _ in handler(new) }
+			handler: handler
 		))
 	}
 
@@ -134,6 +152,18 @@ extension StateUpdate where Value: Equatable {
 }
 
 extension UpdateHandler where Value: Equatable {
+	/// Convenience initializer setting the shouldChangeHandler to compare old and new values
+	init(
+		compareEquality: Bool,
+		updateWithCurrent: Bool = false,
+		handler : @escaping DidUpdateHandler
+	) {
+		self.init(
+			shouldHandleUpdate: compareEquality ? { $0.hasChangedValue } : nil,
+			updateWithCurrent: updateWithCurrent,
+			handler: handler
+		)
+	}
 
 	/// Convenience initializer setting the shouldChangeHandler to compare old and new values
 	init(
@@ -192,7 +222,7 @@ extension UpdateObservable where Value: ExpressibleByNilLiteral {
 		addUpdateHandler(.init(
 			shouldHandleUpdate: { $0.converted(with: keyPath).hasChangedValue },
 			updateWithCurrent: provideCurrent,
-			handler: { _, new, _ in handler(new) }
+			handler: handler
 		))
 	}
 
@@ -231,7 +261,7 @@ extension UpdateObservable {
 		addUpdateHandler(.init(
 			shouldHandleUpdate: { $0.converted(with: keyPath).hasChangedValue },
 			updateWithCurrent: provideCurrent,
-			handler: { _, new, _ in handler(new)}
+			handler: handler
 		))
 	}
 
@@ -249,6 +279,48 @@ extension UpdateObservable {
 		addUpdateHandler(.init(
 			shouldHandleUpdate: { $0.converted(with: keyPath).hasChangedValue },
 			updateWithCurrent: provideCurrent,
+			handler: handler
+		))
+	}
+}
+
+extension UpdateObservable {
+	/// Adds an update handler called whenever the observed value has changed at the provided keyPaths
+	/// - Parameters:
+	///   - keyPaths: Array of KeyPaths to values to compare,
+	///   making sure the update handler is only executed when at least one of the value has changed
+	///   - provideCurrent: Whether the provided closure should be called immediately with the current value
+	///   - handler: Closure executed containing just the new value
+	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
+	public func didChange(
+		comparing keyPaths: [KeyPath<Value, some Equatable>],
+		withCurrent provideCurrent: Bool = false,
+		_ handler: @escaping DidUpdateHandler
+	) -> StateValueObserver {
+		addUpdateHandler(.init(
+			shouldHandleUpdate: { update in
+				keyPaths.contains { update.converted(with: $0).hasChangedValue }
+			},
+			handler: handler
+		))
+	}
+
+	/// Adds an update handler called whenever the observed value has changed at the provided keyPath
+	/// - Parameters:
+	///   - keyPath: Array of KeyPaths to values to compare,
+	///   making sure the update handler is only executed when at least one of the value has changed
+	///   - provideCurrent: Whether the provided closure should be called immediately with the current value
+	///   - handler: Closure executed containing just the new value
+	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
+	public func didChange(
+		comparing keyPaths: [KeyPath<Value, some Equatable>],
+		withCurrent provideCurrent: Bool = false,
+		_ handler: @escaping FullDidUpdateHandler
+	) -> StateValueObserver {
+		addUpdateHandler(.init(
+			shouldHandleUpdate: { update in
+				keyPaths.contains { update.converted(with: $0).hasChangedValue }
+			},
 			handler: handler
 		))
 	}
