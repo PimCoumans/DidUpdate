@@ -80,12 +80,12 @@ public protocol UpdateObservable<Value> {
 extension UpdateObservable {
 	/// Closure providing just the new value of the update as it's only argument
 	public typealias DidUpdateHandler = (_ newValue: Value) -> Void
-	/// Closure accepting all available arguments for updates: the previous value, the new value and wether the handler was called with just the current value
+	/// Closure accepting all available arguments for updates: the previous value, the new value and whether the handler was called with just the current value
 	public typealias FullDidUpdateHandler = (_ oldValue: Value, _ newValue: Value, _ isCurrent: Bool) -> Void
 
 	/// Adds an update handler called whenever the observed value updates
 	/// - Parameters:
-	///   - provideLatestValue: Wether the provided closure should be called immediately with the current value
+	///   - provideLatestValue: Whether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing just the new value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
 	public func didUpdate(
@@ -100,8 +100,8 @@ extension UpdateObservable {
 
 	/// Adds an update handler called whenever the observed value updates
 	/// - Parameters:
-	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
-	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
+	///   - provideCurrent: Whether the provided closure should be called immediately with the current value
+	///   - handler: Closure executed containing the old and new value, and whether the closure was called with the current value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
 	public func didUpdate(
 		withCurrent provideCurrent: Bool = false,
@@ -117,7 +117,7 @@ extension UpdateObservable {
 extension UpdateObservable where Value: Equatable {
 	/// Adds an update handler called whenever the observed value has changed, comparing old and new value
 	/// - Parameters:
-	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
+	///   - provideCurrent: Whether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing just the new value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
 	public func didChange(
@@ -133,8 +133,8 @@ extension UpdateObservable where Value: Equatable {
 
 	/// Adds an update handler called whenever the observed value has changed, comparing old and new value
 	/// - Parameters:
-	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
-	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
+	///   - provideCurrent: Whether the provided closure should be called immediately with the current value
+	///   - handler: Closure executed containing the old and new value, and whether the closure was called with the current value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
 	public func didChange(
 		withCurrent provideCurrent: Bool = false,
@@ -199,7 +199,6 @@ extension StateUpdate {
 }
 
 extension StateUpdate where Value: ExpressibleByNilLiteral {
-
 	/// Converts the update's values to the value at provided keyPath
 	@inlinable
 	func converted<Wrapped, Subject>(
@@ -219,7 +218,7 @@ extension UpdateObservable where Value: ExpressibleByNilLiteral {
 	/// so it does not need to be composed with a preceding `.?.`
 	/// - Parameters:
 	///   - keyPath: KeyPath to value to compare, making sure the update handler is only executed when value changed
-	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
+	///   - provideCurrent: Whether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing just the new value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
 	public func didChange<Wrapped, Subject: Equatable>(
@@ -238,8 +237,8 @@ extension UpdateObservable where Value: ExpressibleByNilLiteral {
 	/// so it does not need to be composed with a preceding `.?.`
 	/// - Parameters:
 	///   - keyPath: KeyPath to value to compare, making sure the update handler is only executed when value changed
-	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
-	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
+	///   - provideCurrent: Whether the provided closure should be called immediately with the current value
+	///   - handler: Closure executed containing the old and new value, and whether the closure was called with the current value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
 	public func didChange<Wrapped, Subject: Equatable>(
 		comparing keyPath: KeyPath<Wrapped, Subject>,
@@ -258,7 +257,7 @@ extension UpdateObservable {
 	/// Adds an update handler called whenever the observed value has changed at the provided keyPath
 	/// - Parameters:
 	///   - keyPath: KeyPath to value to compare, making sure the update handler is only executed when value changed
-	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
+	///   - provideCurrent: Whether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing just the new value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
 	public func didChange<Subject: Equatable>(
@@ -276,8 +275,8 @@ extension UpdateObservable {
 	/// Adds an update handler called whenever the observed value has changed at the provided keyPath
 	/// - Parameters:
 	///   - keyPath: KeyPath to value to compare, making sure the update handler is only executed when value changed
-	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
-	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
+	///   - provideCurrent: Whether the provided closure should be called immediately with the current value
+	///   - handler: Closure executed containing the old and new value, and whether the closure was called with the current value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
 	public func didChange<Subject: Equatable>(
 		comparing keyPath: KeyPath<Value, Subject>,
