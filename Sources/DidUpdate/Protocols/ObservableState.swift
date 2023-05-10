@@ -29,26 +29,25 @@ public struct ObservableValues<StateObject: ObservableState> {
 	}
 }
 
-private var stateObserverKey = "ObservableStateObserver"
-public extension ObservableState {
-	private func newObserver() -> StateObserver { .init() }
+private let key = malloc(1)!
 
-	var stateObserver: StateObserver {
-		if let handler = objc_getAssociatedObject(self, &stateObserverKey) as? StateObserver {
-			return handler
+extension ObservableState {
+	public var stateObserver: StateObserver {
+		guard let observer = objc_getAssociatedObject(self, key) as? StateObserver else {
+			let observer = StateObserver()
+			objc_setAssociatedObject(self, key, observer, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+			return observer
 		}
-		let handler = newObserver()
-		objc_setAssociatedObject(self, &stateObserverKey, handler, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-		return handler
+		return observer
 	}
 
 	/// Wrapper to create local proxies using dynamic member subscripts
 	/// - Returns: ``ObservableValues`` struct pointing to wrapping self
-	var observableValues: ObservableValues<Self> {
+	public var observableValues: ObservableValues<Self> {
 		ObservableValues(observing: self)
 	}
 
-	internal func valueProxy<Value>(from keyPath: ReferenceWritableKeyPath<Self, Value>) -> ValueProxy<Value> {
+	func valueProxy<Value>(from keyPath: ReferenceWritableKeyPath<Self, Value>) -> ValueProxy<Value> {
 		ValueProxy {
 			self[keyPath: keyPath]
 		} set: { newValue in
@@ -58,7 +57,7 @@ public extension ObservableState {
 		}
 	}
 
-	internal func readonlyProxy<Value>(from keyPath: KeyPath<Self, Value>) -> ReadOnlyProxy<Value> {
+	func readonlyProxy<Value>(from keyPath: KeyPath<Self, Value>) -> ReadOnlyProxy<Value> {
 		ReadOnlyProxy {
 			self[keyPath: keyPath]
 		} updateHandler: { handler in
