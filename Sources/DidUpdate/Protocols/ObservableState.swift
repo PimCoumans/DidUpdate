@@ -20,6 +20,13 @@ public struct ObservableValues<StateObject: ObservableState> {
 	) -> ValueProxy<Value> {
 		stateObject().valueProxy(from: keyPath)
 	}
+
+	@_disfavoredOverload
+	public subscript<Value>(
+		dynamicMember keyPath: KeyPath<StateObject, Value>
+	) -> ReadOnlyProxy<Value> {
+		stateObject().readonlyProxy(from: keyPath)
+	}
 }
 
 private var stateObserverKey = "ObservableStateObserver"
@@ -46,6 +53,14 @@ public extension ObservableState {
 			self[keyPath: keyPath]
 		} set: { newValue in
 			self[keyPath: keyPath] = newValue
+		} updateHandler: { handler in
+			self.addObserver(keyPath: keyPath, handler: handler)
+		}
+	}
+
+	internal func readonlyProxy<Value>(from keyPath: KeyPath<Self, Value>) -> ReadOnlyProxy<Value> {
+		ReadOnlyProxy {
+			self[keyPath: keyPath]
 		} updateHandler: { handler in
 			self.addObserver(keyPath: keyPath, handler: handler)
 		}
