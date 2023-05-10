@@ -13,7 +13,7 @@ public class StateObserver {
 		receivedPing = true
 	}
 
-	/// Logs a warning when getter of property at given keyPath isn‘t wrapped by ``ObservedValue``, so update handler would never be called
+	/// Logs a warning when getter of property at given keyPath isn’t wrapped by ``ObservedValue``, so update handler would never be called
 	/// Does not attempt to cast result to `Value`, instead also accepts when result is an `ObservedValue` itself
 	fileprivate func validateGetter<Value>(for keyPath: AnyKeyPath, expecting: Value.Type, getter: () -> Any) {
 		guard !validatedObservedValues.contains(keyPath) else {
@@ -24,7 +24,7 @@ public class StateObserver {
 		if receivedPing || result is ObservedValue<Value> {
 			validatedObservedValues.insert(keyPath)
 		} else {
-			print("Warning: update handlers for property \(type(of: keyPath)) won‘t be called as it doesn‘t have a @ViewState property wrapper!")
+			print("Warning: update handlers for property \(type(of: keyPath)) won’t be called as it doesn’t have a @ViewState property wrapper!")
 		}
 	}
 }
@@ -53,7 +53,7 @@ internal extension ObservableState {
 			if let currentValue = self[keyPath: keyPath] as? Value {
 				observer.handleUpdate(.current(value: currentValue))
 			} else if let wrapper = self[keyPath: keyPath] as? ObservedValue<Value> {
-				/// When adding observer from ``StateValue`` the keyPath points to the wrapper itself
+				/// When adding observer from ``ObservedValue`` the keyPath points to the wrapper itself
 				observer.handleUpdate(.current(value: wrapper.storage))
 			}
 		}

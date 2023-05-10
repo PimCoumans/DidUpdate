@@ -145,7 +145,7 @@ final class ViewModelStateTests: XCTestCase {
 	}
 
 	func testStateValueObservers() {
-		// Same as above but using projected value of `@StateValue` property wrappers
+		// Same as above but using projected value of `@ObservedValue` property wrappers
 		let view = SomeView()
 		let bool = BooleanContainer()
 		view.viewModel.frame = .zero

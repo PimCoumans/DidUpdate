@@ -39,7 +39,7 @@ class MyView: UIView {
 
     func setupView() {
         addSubview(stepper)
-        // Use an update handler to set the label‘s text when count updates
+        // Use an update handler to set the label’s text when count updates
         $viewModel.count.didUpdate { [weak self] count in
             self?.countLabel.text = "\(count)"
         }.add(to: &observers)
@@ -60,11 +60,11 @@ Now you can have a tiny reactive-ish architecture for your UIKit views too!
 
 ## ↔️ What does it do exactly?
 The two main features are
-- Inform you when a specific property in your model class has been updated. If your value conforms to `Equatable` you‘ll know when its value was actually changed.
-- Pass along two-way binding property wrappers that can read and update properties on your model class, making sure its `didSet { }` is called as well. There‘s also the convenient availability to create bindings to nested properties using KeyPath subscripts (like `$viewModel.someFrame.size.width`).
+- Inform you when a specific property in your model class has been updated. If your value conforms to `Equatable` you’ll know when its value was actually changed.
+- Pass along two-way binding property wrappers that can read and update properties on your model class, making sure its `didSet { }` is called as well. There’s also the convenient availability to create bindings to nested properties using KeyPath subscripts (like `$viewModel.someFrame.size.width`).
 
 ## ✨ How can I do this?
-To enable this magic, make sure your model object conforms to `ObservableState` and hold onto it using the `@ObservedState` property wrapper in your view (controller). For all your model‘s properties use `@ObservedValue` when you want these to be observable. Take another gander at the example above to see how it all fits together.
+To enable this magic, make sure your model object conforms to `ObservableState` and hold onto it using the `@ObservedState` property wrapper in your view (controller). For all your model’s properties use `@ObservedValue` when you want these to be observable. Take another gander at the example above to see how it all fits together.
 
 ### Handling updates/changes
 On all value properties you get a bunch of `didUpdate` methods, allowing you to provide update handlers that are executed when the property is updated.
@@ -79,7 +79,7 @@ let observer = $username.didUpdate { username in
     print("Username updated to: \(username)")
 }
 ```
-Ideally you‘d store those returned observers in an array, much like `[AnyCancellable]`:
+Ideally you’d store those returned observers in an array, much like `[AnyCancellable]`:
 ```swift
 var observers: [StateValueObserver] = []
 func addObservers() {
@@ -108,7 +108,7 @@ let observer = $viewModel.username.didChange(comparing: \.isEmpty) { username in
 ```
 
 ### Two-way binding (value proxies)
-To pass around two-way bindings to these values, you can create a `ValueProxy` by accessing the projected value (with `$`) of your object‘s property wrapper:
+To pass around two-way bindings to these values, you can create a `ValueProxy` by accessing the projected value (with `$`) of your object’s property wrapper:
 
 ```swift
 class SubView: UIView {
@@ -121,7 +121,7 @@ class SubView: UIView {
 let someSubView = SubView(username: $viewModel.username)
 ```
 
-Changing the username property in `SubView` in this example would automatically update the property in your viewModel. Reading the `username` property in `SubView` would give you the actual up-to-date value, even when changed from somewhere else (just like you‘d expect from `@Binding`).
+Changing the username property in `SubView` in this example would automatically update the property in your viewModel. Reading the `username` property in `SubView` would give you the actual up-to-date value, even when changed from somewhere else (just like you’d expect from `@Binding`).
 
 ## ❓That's it?
-That‘s about it! Please [let me know](https://twitter.com/pimcoumans) if you have any questions.
+That’s about it! Please [let me know](https://twitter.com/pimcoumans) if you have any questions.

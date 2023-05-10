@@ -17,7 +17,7 @@ public struct ObservedValue<Value> {
 	) -> Value {
 		get {
 			/// Ping update observer signaling value getter was intercepted by this property wrapper
-			/// For more details look into `validateGetter()` in ``StateObserver``‘s implementation
+			/// For more details look into `validateGetter()` in ``StateObserver``’s implementation
 			instance.stateObserver.ping()
 			return instance[keyPath: storageKeyPath].storage
 		}
@@ -30,7 +30,7 @@ public struct ObservedValue<Value> {
 		}
 	}
 
-	/// Creates a read only proxy to the ``ObservedValue``‘s current value and allows adding update handlers
+	/// Creates a read only proxy to the ``ObservedValue``’s current value and allows adding update handlers
 	public static subscript<EnclosingSelf: ObservableState>(
 		_enclosingInstance instance: EnclosingSelf,
 		projected projectedKeyPath: KeyPath<EnclosingSelf, ReadOnlyProxy<Value>>,

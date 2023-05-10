@@ -18,7 +18,9 @@
 @propertyWrapper
 public struct ObservedState<StateObject: ObservableState> {
 
-	public var wrappedValue: StateObject
+	public var wrappedValue: StateObject { didSet {
+		print("Updating an @ObservedState’s value isn’t supported and only new observers will get updated")
+	}}
 	public var projectedValue: ObservableValues<StateObject> {
 		wrappedValue.observableValues
 	}
