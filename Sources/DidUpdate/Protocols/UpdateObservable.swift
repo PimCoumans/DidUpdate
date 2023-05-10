@@ -1,8 +1,8 @@
 /// Instructions on how to handle a state update
 public struct UpdateHandler<Value> {
 	let updateWithCurrentValue: Bool
-	private let shouldHandleUpdate: ((_ update: StateUpdate<Value>) -> Bool)?
-	private let handler: (_ update: StateUpdate<Value>) -> Void
+	let shouldHandleUpdate: ((_ update: StateUpdate<Value>) -> Bool)?
+	let handler: (_ update: StateUpdate<Value>) -> Void
 
 	func handle(update: StateUpdate<Value>) {
 		guard shouldHandleUpdate?(update) ?? true else {

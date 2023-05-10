@@ -9,7 +9,7 @@ public class StateObserver {
 	private var validatedObservedValues: Set<AnyKeyPath> = []
 
 	/// Signals a property getter was intercepted by a ``ObservedValue`` property wrapper
-	internal func ping() {
+	func ping() {
 		receivedPing = true
 	}
 
@@ -30,7 +30,7 @@ public class StateObserver {
 }
 
 /// Forwarding calls to ``StateObserver``
-internal extension ObservableState {
+extension ObservableState {
 	/// Calls all observers for the given keyPath with new and old value
 	func notifyUpdate<Value>(
 		_ update: StateUpdate<Value>,
@@ -62,7 +62,7 @@ internal extension ObservableState {
 }
 
 /// Type of update an observer is called with
-internal enum StateUpdate<Value> {
+enum StateUpdate<Value> {
 	/// Called when initial value should be provided
 	case current(value: Value)
 	/// Called when state was updated but not necessarily to different value
@@ -70,11 +70,11 @@ internal enum StateUpdate<Value> {
 }
 
 /// Any observer capable of handling a state updates
-internal protocol UpdateHandleable {
+protocol UpdateHandleable {
 	func handleUpdate<Value>(_ update: StateUpdate<Value>)
 }
 
-internal extension StateObserver {
+extension StateObserver {
 
 	fileprivate func handleUpdate<Value>(
 		_ update: StateUpdate<Value>,

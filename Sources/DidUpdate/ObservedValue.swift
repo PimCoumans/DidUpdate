@@ -4,7 +4,8 @@
 @propertyWrapper
 public struct ObservedValue<Value> {
 
-	internal var storage: Value
+	var storage: Value
+
 	public init(wrappedValue: Value) {
 		self.storage = wrappedValue
 	}
@@ -23,7 +24,7 @@ public struct ObservedValue<Value> {
 		}
 		set {
 			let oldValue = instance[keyPath: storageKeyPath].storage
-			let update = StateUpdate.updated(old: oldValue, new: newValue)
+			let update: StateUpdate = .updated(old: oldValue, new: newValue)
 			instance[keyPath: storageKeyPath].storage = newValue
 			/// Notify ``ObservableState`` of update
 			instance.notifyUpdate(update, at: wrappedKeyPath, from: storageKeyPath)

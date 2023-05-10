@@ -2,7 +2,7 @@
 public struct StateValueObserver {
 	private var observer: AnyObject
 
-	internal init<Value>(
+	init<Value>(
 		_ observer: StateObserver.Observer<Value>
 	) {
 		self.observer = observer
@@ -38,9 +38,9 @@ public struct ObserverBuilder {
 	}
 }
 
-public extension RangeReplaceableCollection where Element == StateValueObserver {
+extension RangeReplaceableCollection where Element == StateValueObserver {
 	/// Adds all resulting observers created in the builder closure
-	mutating func add(@ObserverBuilder _ builder: () -> [StateValueObserver]) {
+	public mutating func add(@ObserverBuilder _ builder: () -> [StateValueObserver]) {
 		append(contentsOf: builder())
 	}
 }
