@@ -19,6 +19,18 @@ public struct ValueProxy<Value>: UpdateObservable {
 	) -> ValueProxy<Subject> {
 		ValueProxy<Subject>(self, keyPath: keyPath)
 	}
+
+	@_disfavoredOverload
+	public subscript<Subject>(
+		dynamicMember keyPath: KeyPath<Value, Subject>
+	) -> ReadOnlyProxy<Subject> {
+		ReadOnlyProxy(
+			get: { wrappedValue[keyPath: keyPath] },
+			updateHandler: { update in
+				updateHandler(update.passThrough(from: keyPath))
+			}
+		)
+	}
 }
 
 extension ValueProxy {
