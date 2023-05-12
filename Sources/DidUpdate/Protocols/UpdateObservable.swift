@@ -88,7 +88,10 @@ extension UpdateObservable {
 	///   - provideLatestValue: Wether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing just the new value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
-	public func didUpdate(withCurrent provideCurrent: Bool = false, handler: @escaping DidUpdateHandler) -> Observer {
+	public func didUpdate(
+		withCurrent provideCurrent: Bool = false,
+		handler: @escaping DidUpdateHandler
+	) -> Observer {
 		addUpdateHandler(.init(
 			updateWithCurrent: provideCurrent,
 			handler: handler
@@ -100,7 +103,10 @@ extension UpdateObservable {
 	///   - provideCurrent: Wether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing the old and new value, and wether the closure was called with the current value
 	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
-	public func didUpdate(withCurrent provideCurrent: Bool = false, handler: @escaping FullDidUpdateHandler) -> Observer {
+	public func didUpdate(
+		withCurrent provideCurrent: Bool = false,
+		handler: @escaping FullDidUpdateHandler
+	) -> Observer {
 		addUpdateHandler(.init(
 			updateWithCurrent: provideCurrent,
 			handler: handler
