@@ -1,13 +1,38 @@
+import Foundation
+
 /// Available to properties on classes conforming to ``ObservableState``.
-/// `ObservedValue` makes sure that update handlers created through``UpdateObservable/didUpdate(withCurrent:handler:)-3mf14``
-/// will be called with the updates intercepted by this property wrapper.
+/// `StoredValue` behaves just like ``ObservedValue`` only  its actual storage is handled by `UserDefaults`.
+/// Other than that it can create a ``ReadOnlyValueProxy`` (or ``ValueProxy`` through ``ObservedState``’s projected value)
+/// and as a result its projected value allows for the creation of ``UpdateObservable/didUpdate(withCurrent:handler:)-3mf14`` observers.
 @propertyWrapper
-public struct ObservedValue<Value> {
+public struct StoredValue<Value> {
+	let defaultValue: Value
 
-	var storage: Value
+	let getter: () -> Value?
+	let setter: (Value) -> Void
 
-	public init(wrappedValue: Value) {
-		self.storage = wrappedValue
+	private var storage: Value {
+		get {
+			getter() ?? defaultValue
+		}
+		nonmutating set {
+			setter(newValue)
+		}
+	}
+
+	/// Creates a new StoredValue property wrapper
+	/// - Parameters:
+	///   - wrappedValue: Default value when value not found in `UserDefaults`
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) {
+		defaultValue = wrappedValue
+		getter = {
+			store.value(forKey: key) as? Value
+		}
+		setter = { value in
+			store.set(value, forKey: key)
+		}
 	}
 
 	/// Updates  the enclosing ``ObservableState``'s ``StateObserver`` whenever the value is changed
@@ -31,7 +56,7 @@ public struct ObservedValue<Value> {
 		}
 	}
 
-	/// Creates a read only proxy to the ``ObservedValue``’s current value and allows adding update handlers
+	/// Creates a read only proxy to the ``StoredValue``’s current value and allows adding update handlers
 	public static subscript<EnclosingSelf: ObservableState>(
 		_enclosingInstance instance: EnclosingSelf,
 		projected projectedKeyPath: KeyPath<EnclosingSelf, ReadOnlyProxy<Value>>,
@@ -63,5 +88,23 @@ public struct ObservedValue<Value> {
 	}
 }
 
-extension ObservedValue: Encodable where Value: Encodable { }
-extension ObservedValue: Decodable where Value: Decodable { }
+extension StoredValue where Value: ExpressibleByNilLiteral {
+	/// Creates a new StoredValue property wrapper with a default `nil` value
+	/// - Parameters:
+	///   - wrappedValue: Default value when value not found in `UserDefaults`
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init<WrappedValue>(wrappedValue: Optional<WrappedValue> = nil, _ key: String, store: UserDefaults = .standard) where Value == Optional<WrappedValue> {
+		defaultValue = wrappedValue
+		getter = {
+			store.value(forKey: key) as? Value
+		}
+		setter = { value in
+			if let value {
+				store.setValue(value, forKey: key)
+			} else {
+				store.removeObject(forKey: key)
+			}
+		}
+	}
+}
