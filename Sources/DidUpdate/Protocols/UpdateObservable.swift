@@ -202,7 +202,9 @@ extension StateUpdate where Value: ExpressibleByNilLiteral {
 
 	/// Converts the update's values to the value at provided keyPath
 	@inlinable
-	func converted<Wrapped, Subject>(with keyPath: KeyPath<Wrapped, Subject>) -> StateUpdate<Subject?> where Value == Optional<Wrapped> {
+	func converted<Wrapped, Subject>(
+		with keyPath: KeyPath<Wrapped, Subject>
+	) -> StateUpdate<Subject?> where Value == Optional<Wrapped> {
 		switch self {
 		case .current(let value):
 			return .current(value: value?[keyPath: keyPath])
