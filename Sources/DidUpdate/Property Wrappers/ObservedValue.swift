@@ -62,3 +62,6 @@ public struct ObservedValue<Value> {
 		fatalError()
 	}
 }
+
+extension ObservedValue: Encodable where Value: Encodable { }
+extension ObservedValue: Decodable where Value: Decodable { }
