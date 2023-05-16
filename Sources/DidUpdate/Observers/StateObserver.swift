@@ -35,7 +35,7 @@ extension ObservableState {
 	func notifyUpdate<Value>(
 		_ update: StateUpdate<Value>,
 		at keyPath: KeyPath<Self, Value>,
-		from storage: KeyPath<Self, ObservedValue<Value>>
+		from storage: PartialKeyPath<Self>
 	) {
 		stateObserver.handleUpdate(update, at: keyPath, storage: storage)
 	}
