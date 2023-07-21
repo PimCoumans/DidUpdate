@@ -11,7 +11,7 @@ public protocol ObservableState: AnyObject {
 @dynamicMemberLookup
 public struct ObservableValues<StateObject: ObservableState> {
 	fileprivate var stateObject: () -> StateObject
-	public init(observing: @autoclosure @escaping () -> StateObject) {
+	fileprivate init(observing: @autoclosure @escaping () -> StateObject) {
 		self.stateObject = observing
 	}
 
@@ -29,6 +29,28 @@ public struct ObservableValues<StateObject: ObservableState> {
 	}
 }
 
+extension ObservableValues {
+	/// Creates `WeakValueProxy` structs to forward getting and setting of values and allow adding observers for specific keyPaths without strongly retaining the source object
+	@dynamicMemberLookup
+	public struct WeakValues {
+		fileprivate var stateObject: () -> StateObject
+		fileprivate init(observing: @autoclosure @escaping () -> StateObject) {
+			self.stateObject = observing
+		}
+
+		public subscript<Value>(
+			dynamicMember keyPath: ReferenceWritableKeyPath<StateObject, Value>
+		) -> WeakValueProxy<Value> {
+			stateObject().weakValueProxy(from: keyPath)
+		}
+	}
+	
+	/// Creates value proxies that don’t retain the source object so these can be passed through and stored by objects retained by your `ObservableState` class.
+	public var weak: WeakValues {
+		WeakValues(observing: stateObject())
+	}
+}
+
 private let key = malloc(1)!
 
 extension ObservableState {
@@ -43,11 +65,13 @@ extension ObservableState {
 
 	/// Wrapper to create local proxies using dynamic member subscripts
 	/// - Returns: ``ObservableValues`` struct pointing to wrapping self
+	/// - Note: Be mindful of retain cycles when passing a `ValueProxy` to an object retained by this class, as these proxies strongly capture `self`.
+	/// Start your dynamic member lookup with `.weak` to create a `WeakValueProxy` to prevent this issue (`observableValues.weak.yourProperty`)
 	public var observableValues: ObservableValues<Self> {
 		ObservableValues(observing: self)
 	}
 
-	func valueProxy<Value>(from keyPath: ReferenceWritableKeyPath<Self, Value>) -> ValueProxy<Value> {
+	fileprivate func valueProxy<Value>(from keyPath: ReferenceWritableKeyPath<Self, Value>) -> ValueProxy<Value> {
 		ValueProxy {
 			self[keyPath: keyPath]
 		} set: { newValue in
@@ -57,11 +81,26 @@ extension ObservableState {
 		}
 	}
 
-	func readonlyProxy<Value>(from keyPath: KeyPath<Self, Value>) -> ReadOnlyProxy<Value> {
+	fileprivate func readonlyProxy<Value>(from keyPath: KeyPath<Self, Value>) -> ReadOnlyProxy<Value> {
 		ReadOnlyProxy {
 			self[keyPath: keyPath]
 		} updateHandler: { handler in
 			self.addObserver(keyPath: keyPath, handler: handler)
 		}
+	}
+
+	fileprivate func weakValueProxy<Value>(from keyPath: ReferenceWritableKeyPath<Self, Value>) -> WeakValueProxy<Value> {
+		WeakValueProxy(
+			currentValue: self[keyPath: keyPath],
+			get: { [weak self] in
+				self?[keyPath: keyPath]
+			},
+			set: { [weak self] newValue in
+				self?[keyPath: keyPath] = newValue
+			},
+			updateHandler: { [weak self] handler in
+				self?.addObserver(keyPath: keyPath, handler: handler)
+			}
+		)
 	}
 }

@@ -1,4 +1,4 @@
-/// Opaque observer object, removing the its observer from the `StateObserver` when deallocated
+/// Opaque observer object, removing its observer from the `StateObserver` when deallocated
 public struct StateValueObserver {
 	private var observer: AnyObject
 
