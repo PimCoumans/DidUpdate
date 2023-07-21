@@ -11,7 +11,7 @@ public protocol ObservableState: AnyObject {
 @dynamicMemberLookup
 public struct ObservableValues<StateObject: ObservableState> {
 	fileprivate var stateObject: () -> StateObject
-	public init(observing: @autoclosure @escaping () -> StateObject) {
+	fileprivate init(observing: @autoclosure @escaping () -> StateObject) {
 		self.stateObject = observing
 	}
 
