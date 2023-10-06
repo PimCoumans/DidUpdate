@@ -23,6 +23,13 @@ public struct ObservableValues<StateObject: ObservableState> {
 
 	@_disfavoredOverload
 	public subscript<Value>(
+		dynamicMember keyPath: ReferenceWritableKeyPath<StateObject, Value>
+	) -> WeakValueProxy<Value> {
+		stateObject().weakValueProxy(from: keyPath)
+	}
+
+	@_disfavoredOverload
+	public subscript<Value>(
 		dynamicMember keyPath: KeyPath<StateObject, Value>
 	) -> ReadOnlyProxy<Value> {
 		stateObject().readonlyProxy(from: keyPath)
