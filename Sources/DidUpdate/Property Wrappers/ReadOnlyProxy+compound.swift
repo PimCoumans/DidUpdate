@@ -1,7 +1,7 @@
 import Foundation
 
 extension ReadOnlyProxy {
-	/// Combines two observables into one single ``ReadOnlyProxy`` with  a tuple of both values
+	/// Combines two observables into one single ``ReadOnlyProxy`` with a tuple of both values
 	/// - Returns: New `ReadOnlyProxy` to use for handling updates or changes to any of the combined values
 	public static func compound<A: UpdateObservable, B: UpdateObservable>(
 		_ a: A, _ b: B
@@ -9,7 +9,7 @@ extension ReadOnlyProxy {
 		proxy(from: [a, b], getter: { (a.currentValue, b.currentValue) })
 	}
 
-	/// Combines three observables into one single ``ReadOnlyProxy`` with  a tuple of all values
+	/// Combines three observables into one single ``ReadOnlyProxy`` with a tuple of all values
 	/// - Returns: New `ReadOnlyProxy` to use for handling updates or changes to any of the combined values
 	public static func compound<A: UpdateObservable, B: UpdateObservable, C: UpdateObservable>(
 		_ a: A, _ b: B, _ c: C
@@ -17,7 +17,7 @@ extension ReadOnlyProxy {
 		proxy(from: [a, b, c], getter: { (a.currentValue, b.currentValue, c.currentValue) })
 	}
 
-	/// Combines four observables into one single ``ReadOnlyProxy`` with  a tuple of all values
+	/// Combines four observables into one single ``ReadOnlyProxy`` with a tuple of all values
 	/// - Returns: New `ReadOnlyProxy` to use for handling updates or changes to any of the combined values
 	public static func compound<A: UpdateObservable, B: UpdateObservable, C: UpdateObservable, D: UpdateObservable>(
 		_ a: A, _ b: B, _ c: C, _ d: D
@@ -31,7 +31,7 @@ extension ReadOnlyProxy {
 	/// - Parameters:
 	///   - provideCurrent: Whether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing just the new value
-	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
+	/// - Returns: Opaque class storing the observation, making sure the closure isn’t called when deallocated
 	public func didChange<A: Equatable, B: Equatable>(
 		withCurrent provideCurrent: Bool = false,
 		handler: @escaping DidUpdateHandler
@@ -58,7 +58,7 @@ extension ReadOnlyProxy {
 	/// - Parameters:
 	///   - provideCurrent: Whether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing just the new value
-	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
+	/// - Returns: Opaque class storing the observation, making sure the closure isn’t called when deallocated
 	public func didChange<A: Equatable, B: Equatable, C: Equatable>(
 		withCurrent provideCurrent: Bool = false,
 		handler: @escaping DidUpdateHandler
@@ -74,7 +74,7 @@ extension ReadOnlyProxy {
 	/// - Parameters:
 	///   - provideCurrent: Whether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing the old and new value, and whether the closure was called with the current value
-	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
+	/// - Returns: Opaque class storing the observation, making sure the closure isn’t called when deallocated
 	public func didChange<A: Equatable, B: Equatable, C: Equatable>(
 		withCurrent provideCurrent: Bool = false,
 		handler: @escaping FullDidUpdateHandler
@@ -90,7 +90,7 @@ extension ReadOnlyProxy {
 	/// - Parameters:
 	///   - provideCurrent: Whether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing just the new value
-	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
+	/// - Returns: Opaque class storing the observation, making sure the closure isn’t called when deallocated
 	public func didChange<A: Equatable, B: Equatable, C: Equatable, D: Equatable>(
 		withCurrent provideCurrent: Bool = false,
 		handler: @escaping DidUpdateHandler
@@ -106,7 +106,7 @@ extension ReadOnlyProxy {
 	/// - Parameters:
 	///   - provideCurrent: Whether the provided closure should be called immediately with the current value
 	///   - handler: Closure executed containing the old and new value, and whether the closure was called with the current value
-	/// - Returns: Opaque class storing the observation, making sure the closure isn't called when deallocated
+	/// - Returns: Opaque class storing the observation, making sure the closure isn’t called when deallocated
 	public func didChange<A: Equatable, B: Equatable, C: Equatable, D: Equatable>(
 		withCurrent provideCurrent: Bool = false,
 		handler: @escaping FullDidUpdateHandler

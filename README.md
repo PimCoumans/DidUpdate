@@ -7,7 +7,7 @@ _So, like `ObservableObject` but without any of that SwiftUI or Combine stuff_
 class MyView: UIView {
     /// Conform your model classes to `ObservableState`
     class ViewModel: ObservableState {
-        /// Use `ObservedValue` for your model's properties
+        /// Use `ObservedValue` for your model’s properties
         @ObservedValue var count: Int = 0
     }
 
@@ -34,7 +34,7 @@ class MyView: UIView {
     var observers: [StateValueObserver] = []
 
     lazy var countLabel = UILabel()
-    // Pass value proxy to ViewModel's count property
+    // Pass value proxy to ViewModel’s count property
     lazy var stepper = StepperView(count: $viewModel.count)
 
     func setupView() {
@@ -49,7 +49,7 @@ class MyView: UIView {
 *(basic counter sample code demonstrating updating a `ValueProxy` and `didUpdate` logic)*
 
 ## 📦 Installation
-To add this dependency to your Xcode project, select File -> Add Package and enter this repository's URL: `https://github.com/PimCoumans/DidUpdate`
+To add this dependency to your Xcode project, select File -> Add Package and enter this repository’s URL: `https://github.com/PimCoumans/DidUpdate`
 
 ## 🤷 But, why?
 SwiftUI is great, but for now I feel more comfortable using plain old UIKit for the more complex parts of my apps. I *do* love how SwiftUI lets you define state and have it automatically update all your views when anything changes. I wanted *that*, but not with the overhead of importing SwiftUI or Combine and using a bunch of publishers, or learning a whole new reactive library.
@@ -89,7 +89,7 @@ func addObservers() {
 }
 ```
 
-Besides `didUpdate` there's also `didChange` indicating the value has actually changed (meaning not considered equal when conforming to `Equatable`):
+Besides `didUpdate` there’s also `didChange` indicating the value has actually changed (meaning not considered equal when conforming to `Equatable`):
 ```swift
 let observer = $viewModel.username.didChange { username in
     print("Username has changed to: \(username)")
@@ -123,5 +123,5 @@ let someSubView = SubView(username: $viewModel.username)
 
 Changing the username property in `SubView` in this example would automatically update the property in your viewModel. Reading the `username` property in `SubView` would give you the actual up-to-date value, even when changed from somewhere else (just like you’d expect from `@Binding`).
 
-## ❓That's it?
+## ❓That’s it?
 That’s about it! Please [let me know](https://twitter.com/pimcoumans) if you have any questions.
