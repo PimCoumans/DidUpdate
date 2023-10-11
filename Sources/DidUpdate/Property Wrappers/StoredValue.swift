@@ -35,7 +35,7 @@ public struct StoredValue<Value> {
 		}
 	}
 
-	/// Updates  the enclosing ``ObservableState``'s ``StateObserver`` whenever the value is changed
+	/// Updates  the enclosing ``ObservableState``’s ``StateObserver`` whenever the value is changed
 	public static subscript<EnclosingSelf: ObservableState>(
 		_enclosingInstance instance: EnclosingSelf,
 		wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Value>,
@@ -63,7 +63,7 @@ public struct StoredValue<Value> {
 		storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Self>
 	) -> ReadOnlyProxy<Value> {
 		get {
-			return ReadOnlyProxy(
+			ReadOnlyProxy(
 				get: {
 					instance[keyPath: storageKeyPath].storage
 				},

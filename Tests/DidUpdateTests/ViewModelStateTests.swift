@@ -90,22 +90,20 @@ final class ViewModelStateTests: XCTestCase {
 		}
 	}
 
-	var observers: [StateValueObserver] = []
-
 	func testOptionalObserving() {
 		let view = SomeView()
 		let bool = BooleanContainer()
 
-		view.$viewModel.optional.didChange(comparing: \.width) { newValue in
+		let observer = view.$viewModel.optional.didChange(comparing: \.width) { newValue in
 			bool.value = true
-		}.add(to: &observers)
+		}
+		_ = observer // hush little 'never read' warning
 
 		bool.expect(false) { view.viewModel.optional?.size.width = 2 }
 		bool.expect(true) { view.viewModel.optional = .zero }
 		bool.expect(true) { view.viewModel.optional?.size.width = 2 }
 		bool.expect(false) { view.viewModel.optional?.size.width = 2 }
 		bool.expect(true) { view.viewModel.optional = nil }
-		observers.removeAll()
 	}
 
 	func testUpdateHandlers() {
@@ -179,5 +177,39 @@ final class ViewModelStateTests: XCTestCase {
 				bool.value = true
 			})
 		}
+	}
+
+	func testMapping() {
+		// Test functionality of mapping proxies
+		let view = SomeView()
+		let bool = BooleanContainer()
+		view.viewModel.frame = .zero
+
+		let observer = view.$viewModel.frame.map(\.width).didChange { newValue in
+			bool.value = true
+		}
+		_ = observer // hush little 'never read' warning
+		bool.expect(true) { view.viewModel.frame.size.width = 20 }
+		bool.expect(false) { view.viewModel.frame.size.height = 20 }
+	}
+
+	func testCompoundProxies() {
+		let view = SomeView()
+		let bool = BooleanContainer()
+		view.viewModel.frame = .zero
+
+		let observer = ReadOnlyProxy.compound(
+			view.$viewModel.frame.width,
+			view.$viewModel.frame.height
+		).didChange { width, height in
+			bool.value = true
+		}
+		_ = observer // hush little 'never read' warning
+
+		bool.expect(true) { view.viewModel.frame.size.width = 20 }
+		bool.expect(false) { view.viewModel.frame.size.width = 20 }
+		bool.expect(true) { view.viewModel.frame.size.height = 20 }
+		bool.expect(false) { view.viewModel.frame.size.height = 20 }
+		bool.expect(false) { view.viewModel.frame.origin.x = 20 }
 	}
 }

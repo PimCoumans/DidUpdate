@@ -35,6 +35,19 @@ public struct ExternallyUpdating<Value>: UpdateObservable {
 		storage = ProxyStorage(valueProxy: valueProxy)
 	}
 
+	public var projectedValue: ExternallyUpdating<Value> { self }
+
+	public subscript<Subject>(dynamicMember keyPath: WritableKeyPath<Value, Subject>) -> ExternallyUpdating<Subject> {
+		ExternallyUpdating<Subject>(valueProxy: ValueProxy(storage.proxy, keyPath: keyPath))
+	}
+}
+
+extension ExternallyUpdating {
+
+	public var currentValue: Value {
+		wrappedValue
+	}
+	
 	public func addUpdateHandler(_ handler: UpdateHandler<Value>) -> Observer {
 		let localHandler = UpdateHandler(
 			updateWithCurrentValue: handler.updateWithCurrentValue,
@@ -44,9 +57,12 @@ public struct ExternallyUpdating<Value>: UpdateObservable {
 		return storage.proxy.addUpdateHandler(localHandler)
 	}
 
-	public var projectedValue: ExternallyUpdating<Value> { self }
-
-	public subscript<Subject>(dynamicMember keyPath: WritableKeyPath<Value, Subject>) -> ExternallyUpdating<Subject> {
-		ExternallyUpdating<Subject>(valueProxy: ValueProxy(storage.proxy, keyPath: keyPath))
+	public func map<MappedValue>(_ transform: @escaping (Value) -> MappedValue) -> ReadOnlyProxy<MappedValue> {
+		ReadOnlyProxy<MappedValue>(
+			get: { transform(wrappedValue) },
+			updateHandler: { update in
+				storage.proxy.updateHandler(update.mapped(using: transform))
+			}
+		)
 	}
 }

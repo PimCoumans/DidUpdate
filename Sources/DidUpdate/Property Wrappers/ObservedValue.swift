@@ -10,7 +10,7 @@ public struct ObservedValue<Value> {
 		self.storage = wrappedValue
 	}
 
-	/// Updates  the enclosing ``ObservableState``'s ``StateObserver`` whenever the value is changed
+	/// Updates  the enclosing ``ObservableState``’s ``StateObserver`` whenever the value is changed
 	public static subscript<EnclosingSelf: ObservableState>(
 		_enclosingInstance instance: EnclosingSelf,
 		wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Value>,

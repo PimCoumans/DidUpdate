@@ -2,10 +2,12 @@
 public struct StateValueObserver {
 	private var observer: AnyObject
 
-	init<Value>(
-		_ observer: StateObserver.Observer<Value>
-	) {
+	init<Value>(_ observer: StateObserver.Observer<Value>) {
 		self.observer = observer
+	}
+
+	init(_ observers: [StateValueObserver]) {
+		self.observer = observers as AnyObject
 	}
 }
 
