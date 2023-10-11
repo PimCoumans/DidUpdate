@@ -25,6 +25,15 @@ extension ReadOnlyProxy {
 	public func addUpdateHandler(_ handler: UpdateHandler<Value>) -> Observer {
 		updateHandler(handler)
 	}
+
+	public func map<MappedValue>(_ transform: @escaping (Value) -> MappedValue) -> ReadOnlyProxy<MappedValue> {
+		ReadOnlyProxy<MappedValue>(
+			get: { transform(wrappedValue) },
+			updateHandler: { update in
+				updateHandler(update.mapped(using: transform))
+			}
+		)
+	}
 }
 
 extension ReadOnlyProxy {

@@ -49,6 +49,18 @@ extension UpdateHandler {
 			}
 		}
 	}
+	/// Creates update handler forwarding closures with transform applied to update
+	func mapped<RootValue>(using transform: @escaping (RootValue) -> Value) -> UpdateHandler<RootValue> {
+		.init(
+			updateWithCurrentValue: updateWithCurrentValue,
+			shouldHandleUpdate: shouldHandleUpdate.map { handler in
+				{ handler($0.mapped(using: transform)) }
+			},
+			handler: { update in
+				handler(update.mapped(using: transform))
+			}
+		)
+	}
 
 	/// Creates update handler forwarding closures with keyPath applied to update
 	func passThrough<RootValue>(from keyPath: KeyPath<RootValue, Value>) -> UpdateHandler<RootValue> {
@@ -75,6 +87,11 @@ public protocol UpdateObservable<Value> {
 	/// - Parameter handler: Update handler, properly configured through one of the `didUpdate` methods
 	/// - Returns: Newly created ``StateValueObserver`` that calls the provide update handler
 	func addUpdateHandler(_ handler: UpdateHandler<Value>) -> Observer
+	
+	/// Maps the value of the receiving observable to `MappedValue`
+	/// - Parameter transform: Closure that maps from `Value` to a new `MappedValue`
+	/// - Returns: ``ReadOnlyProxy`` with new value
+	func map<MappedValue>(_ transform: @escaping (Value) -> MappedValue) -> ReadOnlyProxy<MappedValue>
 }
 
 extension UpdateObservable {
@@ -186,6 +203,16 @@ extension UpdateHandler where Value: Equatable {
 }
 
 extension StateUpdate {
+	/// Converts the update's values using the provided transform closure
+	@inlinable
+	func mapped<Subject>(using transform: (Value) -> Subject) -> StateUpdate<Subject> {
+		switch self {
+		case .current(let value):
+			return .current(value: transform(value))
+		case .updated(let old, let new):
+			return .updated(old: transform(old), new: transform(new))
+		}
+	}
 	/// Converts the update's values to the value at provided keyPath
 	@inlinable
 	func converted<Subject>(with keyPath: KeyPath<Value, Subject>) -> StateUpdate<Subject> {

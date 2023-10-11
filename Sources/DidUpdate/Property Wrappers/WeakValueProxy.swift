@@ -56,6 +56,15 @@ extension WeakValueProxy {
 		let emptyObserver = StateObserver.Observer(keyPath: \Self.currentValue, handler: handler)
 		return StateValueObserver(emptyObserver)
 	}
+
+	public func map<MappedValue>(_ transform: @escaping (Value) -> MappedValue) -> ReadOnlyProxy<MappedValue> {
+		.init(
+			get: { transform(self.wrappedValue) },
+			updateHandler: { update in
+				self.addUpdateHandler(update.mapped(using: transform))
+			}
+		)
+	}
 }
 
 extension WeakValueProxy {

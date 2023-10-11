@@ -63,7 +63,7 @@ public struct StoredValue<Value> {
 		storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Self>
 	) -> ReadOnlyProxy<Value> {
 		get {
-			return ReadOnlyProxy(
+			ReadOnlyProxy(
 				get: {
 					instance[keyPath: storageKeyPath].storage
 				},
