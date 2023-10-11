@@ -34,6 +34,10 @@ public struct ValueProxy<Value>: UpdateObservable {
 }
 
 extension ValueProxy {
+	public var currentValue: Value {
+		wrappedValue
+	}
+	
 	public func addUpdateHandler(_ handler: UpdateHandler<Value>) -> Observer {
 		updateHandler(handler)
 	}

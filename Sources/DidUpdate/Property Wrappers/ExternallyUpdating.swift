@@ -44,6 +44,10 @@ public struct ExternallyUpdating<Value>: UpdateObservable {
 
 extension ExternallyUpdating {
 
+	public var currentValue: Value {
+		wrappedValue
+	}
+	
 	public func addUpdateHandler(_ handler: UpdateHandler<Value>) -> Observer {
 		let localHandler = UpdateHandler(
 			updateWithCurrentValue: handler.updateWithCurrentValue,

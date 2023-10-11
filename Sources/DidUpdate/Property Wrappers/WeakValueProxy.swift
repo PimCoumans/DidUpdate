@@ -6,7 +6,7 @@ public class WeakValueProxy<Value>: UpdateObservable {
 	let set: (Value) -> Void
 	let updateHandler: (UpdateHandler<Value>) -> StateValueObserver?
 
-	var currentValue: Value
+	public private(set) var currentValue: Value
 
 	public var wrappedValue: Value {
 		get {

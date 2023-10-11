@@ -22,6 +22,10 @@ public struct ReadOnlyProxy<Value>: UpdateObservable {
 }
 
 extension ReadOnlyProxy {
+	public var currentValue: Value {
+		wrappedValue
+	}
+
 	public func addUpdateHandler(_ handler: UpdateHandler<Value>) -> Observer {
 		updateHandler(handler)
 	}

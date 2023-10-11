@@ -82,6 +82,9 @@ public protocol UpdateObservable<Value> {
 	associatedtype Value
 	typealias Observer = StateValueObserver
 
+	/// Retrieves the current or most recent value of the observable
+	var currentValue: Value { get }
+
 	/// Not to be called directly, but rather implemented by types conforming to `UpdateObservable`.
 	/// Implement this method to create a ``StateValueObserver`` with the provided ``UpdateHandler``
 	/// - Parameter handler: Update handler, properly configured through one of the `didUpdate` methods
@@ -167,9 +170,15 @@ extension UpdateObservable where Value: Equatable {
 
 extension StateUpdate where Value: Equatable {
 	@inlinable var hasChangedValue: Bool {
+		hasChangedValue(comparing: { $0 != $1 })
+	}
+}
+
+extension StateUpdate {
+	@inlinable func hasChangedValue(comparing comparer: (Value, Value) -> Bool) -> Bool {
 		switch self {
 		case .current: return true
-		case .updated(let old, let new): return old != new
+		case .updated(let old, let new): return comparer(old, new)
 		}
 	}
 }
