@@ -1,5 +1,5 @@
 /// Available to properties on classes conforming to ``ObservableState``.
-/// `ObservedValue` makes sure that update handlers created through``UpdateObservable/didUpdate(withCurrent:handler:)-3mf14``
+/// `ObservedValue` makes sure that update handlers created through ``UpdateObservable/didUpdate(withCurrent:handler:)-3mf14``
 /// will be called with the updates intercepted by this property wrapper.
 @propertyWrapper
 public struct ObservedValue<Value> {

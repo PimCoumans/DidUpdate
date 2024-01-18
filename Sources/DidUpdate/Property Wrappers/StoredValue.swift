@@ -1,7 +1,7 @@
 import Foundation
 
 /// Available to properties on classes conforming to ``ObservableState``.
-/// `StoredValue` behaves just like ``ObservedValue`` only  its actual storage is handled by `UserDefaults`.
+/// `StoredValue` behaves just like ``ObservedValue`` only its actual storage is handled by `UserDefaults`.
 /// Other than that it can create a ``ReadOnlyValueProxy`` (or ``ValueProxy`` through ``ObservedState``’s projected value)
 /// and as a result its projected value allows for the creation of ``UpdateObservable/didUpdate(withCurrent:handler:)-3mf14`` observers.
 @propertyWrapper
