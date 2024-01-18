@@ -42,6 +42,9 @@ final class ViewModelStateTests: XCTestCase {
 		@ObservedValue var structProperty = ViewModelProperty() { didSet {
 			structBoolean.value = true
 		}}
+
+		@StoredValue("StoredProperty") var storedProperty: Bool = false
+		@StoredValue("OptionalStoredProperty") var optionalStoredProperty: String?
 	}
 
 	class SomeView {
@@ -253,5 +256,29 @@ final class ViewModelStateTests: XCTestCase {
 		bool.expect(true, operation: { view.viewModel.frame.size.height = 2 })
 		bool.expect(true, operation: { view.viewModel.optional = .zero })
 		bool.expect(false, operation: { view.viewModel.frame.size.height = 20 })
+	}
+
+	func testStoredValues() {
+		let view = SomeView()
+		let bool = BooleanContainer()
+
+		var observer = view.$viewModel.storedProperty.didChange { newValue in
+			bool.value = true
+		}
+		_ = observer
+
+		let defaults = UserDefaults.standard
+		defaults.removeObject(forKey: "StoredProperty")
+		defaults.removeObject(forKey: "OptionalStoredProperty")
+
+		bool.expect(false) { view.viewModel.storedProperty = false }
+		bool.expect(true) { view.viewModel.storedProperty = true }
+
+		observer = view.$viewModel.optionalStoredProperty.didChange { newValue in
+			bool.value = true
+		}
+
+		bool.expect(false) { view.viewModel.optionalStoredProperty = nil }
+		bool.expect(true) { view.viewModel.optionalStoredProperty = "someString" }
 	}
 }

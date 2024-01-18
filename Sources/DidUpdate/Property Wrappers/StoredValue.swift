@@ -11,7 +11,7 @@ public struct StoredValue<Value> {
 	let getter: () -> Value?
 	let setter: (Value) -> Void
 
-	private var storage: Value {
+	var storage: Value {
 		get {
 			getter() ?? defaultValue
 		}
@@ -20,19 +20,19 @@ public struct StoredValue<Value> {
 		}
 	}
 
-	/// Creates a new StoredValue property wrapper
-	/// - Parameters:
-	///   - wrappedValue: Default value when value not found in `UserDefaults`
-	///   - key: Key to use to access `UserDefaults`
-	///   - store: `UserDefaults` store to use
-	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) {
-		defaultValue = wrappedValue
-		getter = {
-			store.value(forKey: key) as? Value
-		}
-		setter = { value in
-			store.set(value, forKey: key)
-		}
+	@available(
+		*, unavailable,
+		 message: "This property wrapper can only be applied to properties of classes conforming to ObservableState")
+	public var wrappedValue: Value {
+		get { fatalError() }
+		set { fatalError() }
+	}
+
+	@available(
+		*, unavailable,
+		 message: "This property wrapper can only be applied to properties of classes conforming to ObservableState")
+	public var projectedValue: ReadOnlyProxy<Value> {
+		fatalError()
 	}
 
 	/// Updates  the enclosing ``ObservableState``’s ``StateObserver`` whenever the value is changed
@@ -71,40 +71,172 @@ public struct StoredValue<Value> {
 			)
 		}
 	}
-
-	@available(
-		*, unavailable,
-		 message: "This property wrapper can only be applied to properties of classes conforming to ObservableState")
-	public var wrappedValue: Value {
-		get { fatalError() }
-		set { fatalError() }
-	}
-
-	@available(
-		*, unavailable,
-		 message: "This property wrapper can only be applied to properties of classes conforming to ObservableState")
-	public var projectedValue: ReadOnlyProxy<Value> {
-		fatalError()
-	}
 }
 
-extension StoredValue where Value: ExpressibleByNilLiteral {
-	/// Creates a new StoredValue property wrapper with a default `nil` value
+extension StoredValue {
+	/// Initializes StoredValue property wrapping using a default value
+	private init(defaultValue: Value, key: String, store: UserDefaults) {
+		self.defaultValue = defaultValue
+		getter = {
+			store.object(forKey: key) as? Value
+		}
+		setter = { value in
+			store.set(value, forKey: key)
+		}
+	}
+	/// Creates a new StoredValue property wrapper for a Bool value
 	/// - Parameters:
 	///   - wrappedValue: Default value when value not found in `UserDefaults`
 	///   - key: Key to use to access `UserDefaults`
 	///   - store: `UserDefaults` store to use
-	public init<WrappedValue>(wrappedValue: Optional<WrappedValue> = nil, _ key: String, store: UserDefaults = .standard) where Value == Optional<WrappedValue> {
-		defaultValue = wrappedValue
+	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == Bool {
+		self.init(defaultValue: wrappedValue, key: key, store: store)
+	}
+	/// Creates a new StoredValue property wrapper for an Int value
+	/// - Parameters:
+	///   - wrappedValue: Default value when value not found in `UserDefaults`
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == Int {
+		self.init(defaultValue: wrappedValue, key: key, store: store)
+	}
+	/// Creates a new StoredValue property wrapper for a Double value
+	/// - Parameters:
+	///   - wrappedValue: Default value when value not found in `UserDefaults`
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == Double {
+		self.init(defaultValue: wrappedValue, key: key, store: store)
+	}
+	/// Creates a new StoredValue property wrapper for a String value
+	/// - Parameters:
+	///   - wrappedValue: Default value when value not found in `UserDefaults`
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == String {
+		self.init(defaultValue: wrappedValue, key: key, store: store)
+	}
+	/// Creates a new StoredValue property wrapper for a URL value
+	/// - Parameters:
+	///   - wrappedValue: Default value when value not found in `UserDefaults`
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == URL {
+		self.init(defaultValue: wrappedValue, key: key, store: store)
+	}
+	/// Creates a new StoredValue property wrapper for a Data value
+	/// - Parameters:
+	///   - wrappedValue: Default value when value not found in `UserDefaults`
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == Data {
+		self.init(defaultValue: wrappedValue, key: key, store: store)
+	}
+}
+
+extension StoredValue {
+	/// Creates a new StoredValue property wrapper for a Set value, storing the value as an Array in the user defaults store
+	/// - Parameters:
+	///   - wrappedValue: Default value when value not found in `UserDefaults`
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init<Element>(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == Set<Element> {
+		self.init(
+			defaultValue: wrappedValue,
+			getter: {
+				guard let array = store.object(forKey: key) as? [Element] else {
+					return nil
+				}
+				return Set(array)
+			},
+			setter: { value in
+				store.set(Array(value), forKey: key)
+			}
+		)
+	}
+}
+
+extension StoredValue where Value: ExpressibleByNilLiteral {
+	/// Initializes StoredValue property wrapping using a default optional value
+	private init<WrappedValue>(key: String, store: UserDefaults) where Value == Optional<WrappedValue> {
+		defaultValue = nil
 		getter = {
-			store.value(forKey: key) as? Value
+			store.object(forKey: key) as? Value
 		}
 		setter = { value in
 			if let value {
-				store.setValue(value, forKey: key)
+				store.set(value, forKey: key)
 			} else {
 				store.removeObject(forKey: key)
 			}
 		}
+	}
+	/// Creates a new StoredValue property wrapper for an optional Bool value
+	/// - Parameters:
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init(_ key: String, store: UserDefaults = .standard) where Value == Bool? {
+		self.init(key: key, store: store)
+	}
+	/// Creates a new StoredValue property wrapper for an optional Int value
+	/// - Parameters:
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init(_ key: String, store: UserDefaults = .standard) where Value == Int? {
+		self.init(key: key, store: store)
+	}
+	/// Creates a new StoredValue property wrapper for an optional Double value
+	/// - Parameters:
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init(_ key: String, store: UserDefaults = .standard) where Value == Double? {
+		self.init(key: key, store: store)
+	}
+	/// Creates a new StoredValue property wrapper for an optional String value
+	/// - Parameters:
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init(_ key: String, store: UserDefaults = .standard) where Value == String? {
+		self.init(key: key, store: store)
+	}
+	/// Creates a new StoredValue property wrapper for an optional URL value
+	/// - Parameters:
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init(_ key: String, store: UserDefaults = .standard) where Value == URL? {
+		self.init(key: key, store: store)
+	}
+	/// Creates a new StoredValue property wrapper for an optional Data value
+	/// - Parameters:
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init(_ key: String, store: UserDefaults = .standard) where Value == Data? {
+		self.init(key: key, store: store)
+	}
+}
+
+extension StoredValue {
+	/// Creates a new StoredValue property wrapper for an optional Set value, storing the value as an Array in the user defaults store
+	/// - Parameters:
+	///   - wrappedValue: Default value when value not found in `UserDefaults`
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init<Element>(_ key: String, store: UserDefaults = .standard) where Value == Set<Element>? {
+		self.init(
+			defaultValue: nil,
+			getter: {
+				guard let array = store.object(forKey: key) as? [Element] else {
+					return nil
+				}
+				return Set(array)
+			},
+			setter: { value in
+				if let value {
+					store.set(Array(value), forKey: key)
+				} else {
+					store.removeObject(forKey: key)
+				}
+			}
+		)
 	}
 }
