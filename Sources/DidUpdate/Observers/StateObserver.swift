@@ -21,7 +21,7 @@ public class StateObserver {
 		}
 		receivedPing = false
 		let result = getter()
-		if receivedPing || result is ObservedValue<Value> {
+		if receivedPing || result is ObservedValue<Value> || result is StoredValue<Value> {
 			validatedObservedValues.insert(keyPath)
 		} else {
 			print("Warning: update handlers for property \(type(of: keyPath)) won’t be called as it doesn’t have a @ViewState property wrapper!")
@@ -54,6 +54,9 @@ extension ObservableState {
 				observer.handleUpdate(.current(value: currentValue))
 			} else if let wrapper = self[keyPath: keyPath] as? ObservedValue<Value> {
 				/// When adding observer from ``ObservedValue`` the keyPath points to the wrapper itself
+				observer.handleUpdate(.current(value: wrapper.storage))
+			} else if let wrapper = self[keyPath: keyPath] as? StoredValue<Value> {
+				/// When adding observer from ``StoredValue`` the keyPath points to the wrapper itself
 				observer.handleUpdate(.current(value: wrapper.storage))
 			}
 		}
