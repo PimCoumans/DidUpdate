@@ -42,12 +42,12 @@ extension ReadOnlyProxy {
 
 extension ReadOnlyProxy {
 	/// Creates a new ReadOnlyProxy from an existing proxy,  applying the provided keyPath to its value and `StateUpdate`
-	init<RootValue>(_ proxy: ReadOnlyProxy<RootValue>, keyPath: KeyPath<RootValue, Value>) {
+	init<Proxy: UpdateObservable>(_ proxy: Proxy, keyPath: KeyPath<Proxy.Value, Value>) {
 		self.get = {
-			proxy.wrappedValue[keyPath: keyPath]
+			proxy.currentValue[keyPath: keyPath]
 		}
 		self.updateHandler = { update in
-			proxy.updateHandler(update.passThrough(from: keyPath))
+			proxy.addUpdateHandler(update.passThrough(from: keyPath))
 		}
 	}
 }
