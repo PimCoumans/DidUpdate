@@ -212,4 +212,46 @@ final class ViewModelStateTests: XCTestCase {
 		bool.expect(false) { view.viewModel.frame.size.height = 20 }
 		bool.expect(false) { view.viewModel.frame.origin.x = 20 }
 	}
+
+	func testNestedMaps() {
+		let view = SomeView()
+		let bool = BooleanContainer()
+		view.viewModel.frame = .zero
+
+		let testSize: CGFloat = 10
+
+		let widthBigger = view.$viewModel.frame.width.map { $0 > testSize }
+		let heightBigger = view.$viewModel.frame.height.map { $0 > testSize }
+		let leftBigger = view.$viewModel.frame.minX.map { $0 > testSize }
+		let topBigger = view.$viewModel.frame.minY.map { $0 > testSize }
+
+		let sizeBigger = ReadOnlyProxy.compound(
+			widthBigger,
+			heightBigger
+		).map { $0 || $1 }
+
+		let frameBigger = ReadOnlyProxy.compound(
+			sizeBigger,
+			leftBigger,
+			topBigger
+		).map { $0 || $1 || $2 }
+
+		let someOtherThing = ReadOnlyProxy.compound(
+			frameBigger,
+			view.$viewModel.optional.map { $0 != nil }
+		).map { $0 || $1 }
+
+		let observer = someOtherThing.didChange { _ in
+			bool.value = true
+		}
+
+		_ = observer
+
+		bool.expect(true, operation: { view.viewModel.frame.size.width = 12 })
+		bool.expect(false, operation: { view.viewModel.frame.size.height = 11 })
+		bool.expect(false, operation: { view.viewModel.frame.size.width = 5 })
+		bool.expect(true, operation: { view.viewModel.frame.size.height = 2 })
+		bool.expect(true, operation: { view.viewModel.optional = .zero })
+		bool.expect(false, operation: { view.viewModel.frame.size.height = 20 })
+	}
 }
