@@ -40,6 +40,11 @@ public struct ExternallyUpdating<Value>: UpdateObservable {
 	public subscript<Subject>(dynamicMember keyPath: WritableKeyPath<Value, Subject>) -> ExternallyUpdating<Subject> {
 		ExternallyUpdating<Subject>(valueProxy: ValueProxy(storage.proxy, keyPath: keyPath))
 	}
+
+	@_disfavoredOverload
+	public subscript<Subject>(dynamicMember keyPath: KeyPath<Value, Subject>) -> ReadOnlyProxy<Subject> {
+		ReadOnlyProxy(storage.proxy, keyPath: keyPath)
+	}
 }
 
 extension ExternallyUpdating {
