@@ -22,6 +22,20 @@ public struct ReadOnlyProxy<Value>: UpdateObservable {
 }
 
 extension ReadOnlyProxy {
+	/// Creates a `ReadOnlyProxy` that always returns the same value. Mostly useful for development and testing
+	/// - Parameter value: Initial value that never changes
+	public init(always value: Value) {
+		self.get = { value }
+		self.updateHandler = { handler in
+			if handler.updateWithCurrentValue {
+				handler.handle(update: .current(value: value))
+			}
+			return .init([])
+		}
+	}
+}
+
+extension ReadOnlyProxy {
 	public var currentValue: Value {
 		wrappedValue
 	}
