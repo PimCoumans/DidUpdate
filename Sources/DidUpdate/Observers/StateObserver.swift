@@ -24,7 +24,7 @@ public class StateObserver {
 		if receivedPing || result is ObservedValue<Value> || result is StoredValue<Value> {
 			validatedObservedValues.insert(keyPath)
 		} else {
-			print("Warning: update handlers for property \(type(of: keyPath)) won’t be called as it doesn’t have a @ViewState property wrapper!")
+			print("Warning: update handlers for property \(type(of: keyPath)) won’t be called as it doesn’t have a @ObservedValue or @StoredValue property wrapper!")
 		}
 	}
 }
