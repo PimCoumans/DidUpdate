@@ -11,7 +11,7 @@ public struct ReadOnlyProxy<Value>: UpdateObservable {
 		}
 	}
 
-	/// Use the `$` syntax to access the `ReadOnlyValueProxy` itself to add update handlers or pass it on to other views, optionally appending any child values through dynamic member lookup
+	/// Use the `$` syntax to access the `ReadOnlyProxy` itself to add update handlers or pass it on to other views, optionally appending any child values through dynamic member lookup
 	public var projectedValue: Self { self }
 
 	public subscript<Subject>(

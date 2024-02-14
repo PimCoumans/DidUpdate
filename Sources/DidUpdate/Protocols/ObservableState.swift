@@ -32,7 +32,7 @@ public struct ObservableValues<StateObject: ObservableState> {
 	public subscript<Value>(
 		dynamicMember keyPath: KeyPath<StateObject, Value>
 	) -> ReadOnlyProxy<Value> {
-		stateObject().readonlyProxy(from: keyPath)
+		stateObject().readOnlyProxy(from: keyPath)
 	}
 }
 
@@ -88,7 +88,7 @@ extension ObservableState {
 		}
 	}
 
-	fileprivate func readonlyProxy<Value>(from keyPath: KeyPath<Self, Value>) -> ReadOnlyProxy<Value> {
+	fileprivate func readOnlyProxy<Value>(from keyPath: KeyPath<Self, Value>) -> ReadOnlyProxy<Value> {
 		ReadOnlyProxy {
 			self[keyPath: keyPath]
 		} updateHandler: { handler in

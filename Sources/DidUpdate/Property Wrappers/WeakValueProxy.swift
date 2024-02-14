@@ -5,19 +5,20 @@ public class WeakValueProxy<Value>: UpdateObservable {
 	let get: () -> Value?
 	let set: (Value) -> Void
 	let updateHandler: (UpdateHandler<Value>) -> StateValueObserver?
-
-	public private(set) var currentValue: Value
+	
+	/// Value used as caching when observed class is no longer availableff
+	private var storedValue: Value
 
 	public var wrappedValue: Value {
 		get {
 			if let value = get() {
-				currentValue = value
+				storedValue = value
 				return value
 			}
-			return currentValue
+			return storedValue
 		}
 		set {
-			currentValue = newValue
+			storedValue = newValue
 			set(newValue)
 		}
 	}
@@ -33,7 +34,7 @@ public class WeakValueProxy<Value>: UpdateObservable {
 		self.get = get
 		self.set = set
 		self.updateHandler = updateHandler
-		self.currentValue = currentValue
+		self.storedValue = currentValue
 	}
 
 	public subscript<Subject>(
@@ -44,6 +45,10 @@ public class WeakValueProxy<Value>: UpdateObservable {
 }
 
 extension WeakValueProxy {
+	public var currentValue: Value {
+		wrappedValue
+	}
+
 	public func addUpdateHandler(_ handler: UpdateHandler<Value>) -> StateValueObserver {
 		let observer = updateHandler(handler)
 		if let observer {
