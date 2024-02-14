@@ -120,6 +120,40 @@ extension ReadOnlyProxy {
 }
 
 extension ReadOnlyProxy {
+	/// Whether all combined boolean values are `true`
+	public func allTrue() -> ReadOnlyProxy<Bool> where Value == (Bool, Bool) {
+		map { $0 && $1 }
+	}
+
+	/// Whether all combined boolean values are `true`
+	public func allTrue() -> ReadOnlyProxy<Bool> where Value == (Bool, Bool, Bool) {
+		map { $0 && $1 && $2 }
+	}
+
+	/// Whether all combined boolean values are `true`
+	public func allTrue() -> ReadOnlyProxy<Bool> where Value == (Bool, Bool, Bool, Bool) {
+		map { $0 && $1 && $2 && $3 }
+	}
+}
+
+extension ReadOnlyProxy {
+	/// Whether at least one of the combined boolean values is `true`
+	public func someTrue() -> ReadOnlyProxy<Bool> where Value == (Bool, Bool) {
+		map { $0 || $1 }
+	}
+
+	/// Whether at least one of the combined boolean values is `true`
+	public func someTrue() -> ReadOnlyProxy<Bool> where Value == (Bool, Bool, Bool) {
+		map { $0 || $1 || $2 }
+	}
+
+	/// Whether at least one of the combined boolean values is `true`
+	public func someTrue() -> ReadOnlyProxy<Bool> where Value == (Bool, Bool, Bool, Bool) {
+		map { $0 || $1 || $2 || $3 }
+	}
+}
+
+extension ReadOnlyProxy {
 	private static func proxy(
 		from proxies: [any UpdateObservable],
 		getter: @escaping () -> Value
