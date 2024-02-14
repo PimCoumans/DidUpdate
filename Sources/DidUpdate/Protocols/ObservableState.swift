@@ -50,6 +50,13 @@ extension ObservableValues {
 		) -> WeakValueProxy<Value> {
 			stateObject().weakValueProxy(from: keyPath)
 		}
+
+		@_disfavoredOverload
+		public subscript<Value>(
+			dynamicMember keyPath: KeyPath<StateObject, Value>
+		) -> WeakReadOnlyProxy<Value> {
+			stateObject().weakReadOnlyProxy(from: keyPath)
+		}
 	}
 	
 	/// Creates value proxies that don’t retain the source object so these can be passed through and stored by objects retained by your `ObservableState` class.
@@ -104,6 +111,18 @@ extension ObservableState {
 			},
 			set: { [weak self] newValue in
 				self?[keyPath: keyPath] = newValue
+			},
+			updateHandler: { [weak self] handler in
+				self?.addObserver(keyPath: keyPath, handler: handler)
+			}
+		)
+	}
+
+	fileprivate func weakReadOnlyProxy<Value>(from keyPath: KeyPath<Self, Value>) -> WeakReadOnlyProxy<Value> {
+		WeakReadOnlyProxy(
+			currentValue: self[keyPath: keyPath],
+			get: { [weak self] in
+				self?[keyPath: keyPath]
 			},
 			updateHandler: { [weak self] handler in
 				self?.addObserver(keyPath: keyPath, handler: handler)

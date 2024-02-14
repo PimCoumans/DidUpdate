@@ -216,6 +216,26 @@ final class ViewModelStateTests: XCTestCase {
 		bool.expect(false) { view.viewModel.frame.origin.x = 20 }
 	}
 
+	func testWeakCompoundProxies() {
+		let view = SomeView()
+		let bool = BooleanContainer()
+		view.viewModel.frame = .zero
+
+		let observer = ReadOnlyProxy.compound(
+			view.viewModel.observableValues.weak.frame.map { $0.width },
+			view.viewModel.observableValues.weak.frame.height
+		).didChange { width, height in
+			bool.value = true
+		}
+		_ = observer // hush little 'never read' warning
+
+		bool.expect(true) { view.viewModel.frame.size.width = 20 }
+		bool.expect(false) { view.viewModel.frame.size.width = 20 }
+		bool.expect(true) { view.viewModel.frame.size.height = 20 }
+		bool.expect(false) { view.viewModel.frame.size.height = 20 }
+		bool.expect(false) { view.viewModel.frame.origin.x = 20 }
+	}
+
 	func testNestedMaps() {
 		let view = SomeView()
 		let bool = BooleanContainer()

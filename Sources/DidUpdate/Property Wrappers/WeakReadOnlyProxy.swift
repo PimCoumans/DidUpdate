@@ -1,11 +1,10 @@
-/// Forwards value getting and setting to a weakly referenced originating ``ObservableState`` class, wrapped by an ``ObservedState`` property wrapper,
+/// Forwards value getting  to a weakly referenced originating ``ObservableState`` class, wrapped by an ``ObservedState`` property wrapper,
 /// and provides the functionality to subscribe to value updates through methods like ``UpdateObservable/didUpdate(withCurrent:handler:)-3mf14``
 @propertyWrapper @dynamicMemberLookup
-public class WeakValueProxy<Value>: UpdateObservable {
+public class WeakReadOnlyProxy<Value>: UpdateObservable {
 	let get: () -> Value?
-	let set: (Value) -> Void
 	let updateHandler: (UpdateHandler<Value>) -> StateValueObserver?
-	
+
 	/// Value used as caching when observed class is no longer availableff
 	private var storedValue: Value
 
@@ -17,47 +16,28 @@ public class WeakValueProxy<Value>: UpdateObservable {
 			}
 			return storedValue
 		}
-		set {
-			storedValue = newValue
-			set(newValue)
-		}
 	}
 
-	public var projectedValue: WeakValueProxy<Value> { self }
+	public var projectedValue: WeakReadOnlyProxy<Value> { self }
 
 	init(
 		currentValue: Value,
 		get: @escaping () -> Value?,
-		set: @escaping (Value) -> Void,
 		updateHandler: @escaping(UpdateHandler<Value>) -> StateValueObserver?
 	) {
 		self.get = get
-		self.set = set
 		self.updateHandler = updateHandler
 		self.storedValue = currentValue
 	}
 
 	public subscript<Subject>(
-		dynamicMember keyPath: WritableKeyPath<Value, Subject>
-	) -> WeakValueProxy<Subject> {
-		WeakValueProxy<Subject>(self, keyPath: keyPath)
-	}
-
-	@_disfavoredOverload
-	public subscript<Subject>(
 		dynamicMember keyPath: KeyPath<Value, Subject>
 	) -> WeakReadOnlyProxy<Subject> {
-		WeakReadOnlyProxy(
-			currentValue: wrappedValue[keyPath: keyPath],
-			get: { self.wrappedValue[keyPath: keyPath] },
-			updateHandler: { update in
-				self.updateHandler(update.passThrough(from: keyPath))
-			}
-		)
+		WeakReadOnlyProxy<Subject>(self, keyPath: keyPath)
 	}
 }
 
-extension WeakValueProxy {
+extension WeakReadOnlyProxy {
 	public var currentValue: Value {
 		wrappedValue
 	}
@@ -85,12 +65,11 @@ extension WeakValueProxy {
 	}
 }
 
-extension WeakValueProxy {
-	convenience init<RootValue>(_ proxy: WeakValueProxy<RootValue>, keyPath: WritableKeyPath<RootValue, Value>) {
+extension WeakReadOnlyProxy {
+	convenience init<RootValue>(_ proxy: WeakReadOnlyProxy<RootValue>, keyPath: KeyPath<RootValue, Value>) {
 		self.init(
 			currentValue: proxy.currentValue[keyPath: keyPath],
 			get: { proxy.wrappedValue[keyPath: keyPath] },
-			set: { proxy.wrappedValue[keyPath: keyPath] = $0 },
 			updateHandler: { update in
 				proxy.updateHandler(update.passThrough(from: keyPath))
 			}
