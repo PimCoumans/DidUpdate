@@ -97,6 +97,12 @@ public protocol UpdateObservable<Value> {
 	func map<MappedValue>(_ transform: @escaping (Value) -> MappedValue) -> ReadOnlyProxy<MappedValue>
 }
 
+extension UpdateObservable where Value: Equatable {
+	public static func ==(left: Self, right: Self) -> Bool {
+		left.currentValue == right.currentValue
+	}
+}
+
 extension UpdateObservable {
 	/// Closure providing just the new value of the update as it’s only argument
 	public typealias DidUpdateHandler = (_ newValue: Value) -> Void

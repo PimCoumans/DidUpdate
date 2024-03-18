@@ -54,6 +54,8 @@ extension ReadOnlyProxy {
 	}
 }
 
+extension ReadOnlyProxy: Equatable where Value: Equatable { }
+
 extension ReadOnlyProxy {
 	/// Creates a new ReadOnlyProxy from an existing proxy,  applying the provided keyPath to its value and `StateUpdate`
 	init<Proxy: UpdateObservable>(_ proxy: Proxy, keyPath: KeyPath<Proxy.Value, Value>) {
