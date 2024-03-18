@@ -301,4 +301,33 @@ final class ViewModelStateTests: XCTestCase {
 		bool.expect(false) { view.viewModel.optionalStoredProperty = nil }
 		bool.expect(true) { view.viewModel.optionalStoredProperty = "someString" }
 	}
+
+	func testStoredCompoundProxy() {
+		let view = SomeView()
+		let bool = BooleanContainer()
+		let secondBool = BooleanContainer()
+		view.viewModel.frame = .zero
+
+		let compoundProxy = ReadOnlyProxy.compound(
+			view.$viewModel.frame.width,
+			view.$viewModel.frame.height
+		)
+		let observer = compoundProxy.didChange { width, height in
+			bool.value = true
+		}
+		let secondObserver = compoundProxy.didChange { width, height in
+			secondBool.value = true
+		}
+		_ = (observer, secondObserver) // hush little 'never read' warning
+
+		bool.expect(true) { view.viewModel.frame.size.width = 20 }
+		bool.expect(false) { view.viewModel.frame.size.width = 20 }
+		bool.expect(true) { view.viewModel.frame.size.height = 20 }
+		bool.expect(false) { view.viewModel.frame.size.height = 20 }
+		bool.expect(false) { view.viewModel.frame.origin.x = 20 }
+
+		secondBool.expect(true) { view.viewModel.frame.size.width = 30 }
+		secondBool.expect(true) { view.viewModel.frame.size.height = 30 }
+		secondBool.expect(false) { view.viewModel.frame.size.height = 30 }
+	}
 }

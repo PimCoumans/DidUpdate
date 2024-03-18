@@ -158,11 +158,11 @@ extension ReadOnlyProxy {
 		from proxies: [any UpdateObservable],
 		getter: @escaping () -> Value
 	) -> ReadOnlyProxy {
-		var previousValue = getter()
-		var wasInitial: Bool = true
 		return ReadOnlyProxy(
 			get: getter,
 			updateHandler: { handler in
+				var previousValue = getter()
+				var wasInitial: Bool = true
 				let observers = proxies.map {
 					$0.didUpdate(withCurrent: handler.updateWithCurrentValue, handler: { _, _, isInitialUpdate in
 						let newValue = getter()
