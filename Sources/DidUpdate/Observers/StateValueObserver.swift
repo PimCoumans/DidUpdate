@@ -35,9 +35,14 @@ extension StateValueObserver {
 
 @resultBuilder
 public struct ObserverBuilder {
-	public static func buildBlock(_ components: StateValueObserver...) -> [StateValueObserver] {
-		components
-	}
+	public typealias Observer = StateValueObserver
+	public static func buildBlock(_ components: Observer...) -> [Observer] { components }
+	public static func buildBlock() -> [Observer] { [] }
+	public static func buildBlock(_ components: [Observer]...) -> [Observer] { components.flatMap { $0 } }
+	public static func buildEither(first components: [Observer]) -> [Observer] { components }
+	public static func buildEither(second components: [Observer]) -> [Observer] { components }
+	public static func buildOptional(_ components: [Observer]?) -> [Observer] { components ?? [] }
+	public static func buildExpression(_ expression: Observer) -> [Observer] { [expression] }
 }
 
 extension RangeReplaceableCollection where Element == StateValueObserver {
