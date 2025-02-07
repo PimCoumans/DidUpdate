@@ -98,18 +98,21 @@ public struct StoredValue<Value> {
 }
 
 extension StoredValue {
+	private init(defaultValue: Value, key: String, store: UserDefaults) {
+		self.init(defaultValue: defaultValue) {
+			store.object(forKey: key) as? Value
+		} setter: { value in
+			store.set(value, forKey: key)
+		}
+
+	}
 	/// Creates a new StoredValue property wrapper for a Bool value
 	/// - Parameters:
 	///   - wrappedValue: Default value when value not found in `UserDefaults`
 	///   - key: Key to use to access `UserDefaults`
 	///   - store: `UserDefaults` store to use
 	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == Bool {
-		self.init(defaultValue: wrappedValue) {
-			store.bool(forKey: key)
-		} setter: {
-			store.setValue($0, forKey: key)
-		}
-
+		self.init(defaultValue: wrappedValue, key: key, store: store)
 	}
 	/// Creates a new StoredValue property wrapper for an Int value
 	/// - Parameters:
@@ -117,11 +120,7 @@ extension StoredValue {
 	///   - key: Key to use to access `UserDefaults`
 	///   - store: `UserDefaults` store to use
 	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == Int {
-		self.init(defaultValue: wrappedValue) {
-			store.integer(forKey: key)
-		} setter: {
-			store.set($0, forKey: key)
-		}
+		self.init(defaultValue: wrappedValue, key: key, store: store)
 	}
 	/// Creates a new StoredValue property wrapper for a Double value
 	/// - Parameters:
@@ -129,11 +128,7 @@ extension StoredValue {
 	///   - key: Key to use to access `UserDefaults`
 	///   - store: `UserDefaults` store to use
 	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == Double {
-		self.init(defaultValue: wrappedValue) {
-			store.double(forKey: key)
-		} setter: {
-			store.set($0, forKey: key)
-		}
+		self.init(defaultValue: wrappedValue, key: key, store: store)
 	}
 	/// Creates a new StoredValue property wrapper for a String value
 	/// - Parameters:
