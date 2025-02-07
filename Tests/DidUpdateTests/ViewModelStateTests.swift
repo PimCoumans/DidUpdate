@@ -282,14 +282,14 @@ final class ViewModelStateTests: XCTestCase {
 		let view = SomeView()
 		let bool = BooleanContainer()
 
+		let defaults = UserDefaults.standard
+		defaults.removeObject(forKey: "StoredProperty")
+		defaults.removeObject(forKey: "OptionalStoredProperty")
+
 		var observer = view.$viewModel.storedProperty.didChange { newValue in
 			bool.value = true
 		}
 		_ = observer
-
-		let defaults = UserDefaults.standard
-		defaults.removeObject(forKey: "StoredProperty")
-		defaults.removeObject(forKey: "OptionalStoredProperty")
 
 		bool.expect(false) { view.viewModel.storedProperty = false }
 		bool.expect(true) { view.viewModel.storedProperty = true }
