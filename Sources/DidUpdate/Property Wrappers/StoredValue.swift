@@ -6,19 +6,38 @@ import Foundation
 /// and as a result its projected value allows for the creation of ``UpdateObservable/didUpdate(withCurrent:handler:)-3mf14`` observers.
 @propertyWrapper
 public struct StoredValue<Value> {
-	let defaultValue: Value
 
-	let getter: () -> Value?
-	let setter: (Value) -> Void
+	class Storage {
+		private let defaultValue: Value
+		private var cachedValue: Value?
 
-	var storage: Value {
-		get {
-			getter() ?? defaultValue
+		private let getter: () -> Value?
+		private let setter: (Value) -> ()
+
+		init(defaultValue: Value, getter: @escaping () -> Value?, setter: @escaping (Value) -> ()) {
+			self.defaultValue = defaultValue
+			self.getter = getter
+			self.setter = setter
 		}
-		nonmutating set {
-			setter(newValue)
+
+		func update(_ value: Value) {
+			cachedValue = value
+			setter(value)
+		}
+
+		var value: Value {
+			if let value = cachedValue {
+				return value
+			}
+			guard let value = getter() else {
+				return defaultValue
+			}
+			cachedValue = value
+			return value
 		}
 	}
+
+	let storage: Storage
 
 	@available(
 		*, unavailable,
@@ -45,12 +64,12 @@ public struct StoredValue<Value> {
 			/// Ping update observer signaling value getter was intercepted by this property wrapper
 			/// For more details look into `validateGetter()` in ``StateObserver``’s implementation
 			instance.stateObserver.ping()
-			return instance[keyPath: storageKeyPath].storage
+			return instance[keyPath: storageKeyPath].storage.value
 		}
 		set {
-			let oldValue = instance[keyPath: storageKeyPath].storage
+			let oldValue = instance[keyPath: storageKeyPath].storage.value
 			let update: StateUpdate = .updated(old: oldValue, new: newValue)
-			instance[keyPath: storageKeyPath].storage = newValue
+			instance[keyPath: storageKeyPath].storage.update(newValue)
 			/// Notify ``ObservableState`` of update
 			instance.notifyUpdate(update, at: wrappedKeyPath, from: storageKeyPath)
 		}
@@ -64,26 +83,21 @@ public struct StoredValue<Value> {
 	) -> ReadOnlyProxy<Value> {
 		get {
 			ReadOnlyProxy(
-				get: {
-					instance[keyPath: storageKeyPath].storage
-				},
+				get: { instance[keyPath: storageKeyPath].storage.value },
 				updateHandler: { instance.addObserver(keyPath: storageKeyPath, handler: $0) }
 			)
 		}
 	}
+	private init(
+		defaultValue: Value,
+		getter: @escaping () -> Value?,
+		setter: @escaping (Value) -> Void
+	) {
+		self.storage = Storage(defaultValue: defaultValue, getter: getter, setter: setter)
+	}
 }
 
 extension StoredValue {
-	/// Initializes StoredValue property wrapping using a default value
-	private init(defaultValue: Value, key: String, store: UserDefaults) {
-		self.defaultValue = defaultValue
-		getter = {
-			store.object(forKey: key) as? Value
-		}
-		setter = { value in
-			store.set(value, forKey: key)
-		}
-	}
 	/// Creates a new StoredValue property wrapper for a Bool value
 	/// - Parameters:
 	///   - wrappedValue: Default value when value not found in `UserDefaults`
@@ -159,11 +173,9 @@ extension StoredValue {
 extension StoredValue where Value: ExpressibleByNilLiteral {
 	/// Initializes StoredValue property wrapping using a default optional value
 	private init<WrappedValue>(key: String, store: UserDefaults) where Value == Optional<WrappedValue> {
-		defaultValue = nil
-		getter = {
+		self.init(defaultValue: nil) {
 			store.object(forKey: key) as? Value
-		}
-		setter = { value in
+		} setter: { value in
 			if let value {
 				store.set(value, forKey: key)
 			} else {
