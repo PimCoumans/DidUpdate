@@ -57,7 +57,7 @@ extension ObservableState {
 				observer.handleUpdate(.current(value: wrapper.storage))
 			} else if let wrapper = self[keyPath: keyPath] as? StoredValue<Value> {
 				/// When adding observer from ``StoredValue`` the keyPath points to the wrapper itself
-				observer.handleUpdate(.current(value: wrapper.storage))
+				observer.handleUpdate(.current(value: wrapper.storage.value))
 			}
 		}
 		return StateValueObserver(observer)
