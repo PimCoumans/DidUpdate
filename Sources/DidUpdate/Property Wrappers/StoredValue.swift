@@ -104,7 +104,12 @@ extension StoredValue {
 	///   - key: Key to use to access `UserDefaults`
 	///   - store: `UserDefaults` store to use
 	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == Bool {
-		self.init(defaultValue: wrappedValue, key: key, store: store)
+		self.init(defaultValue: wrappedValue) {
+			store.bool(forKey: key)
+		} setter: {
+			store.setValue($0, forKey: key)
+		}
+
 	}
 	/// Creates a new StoredValue property wrapper for an Int value
 	/// - Parameters:
@@ -112,7 +117,11 @@ extension StoredValue {
 	///   - key: Key to use to access `UserDefaults`
 	///   - store: `UserDefaults` store to use
 	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == Int {
-		self.init(defaultValue: wrappedValue, key: key, store: store)
+		self.init(defaultValue: wrappedValue) {
+			store.integer(forKey: key)
+		} setter: {
+			store.set($0, forKey: key)
+		}
 	}
 	/// Creates a new StoredValue property wrapper for a Double value
 	/// - Parameters:
@@ -120,7 +129,11 @@ extension StoredValue {
 	///   - key: Key to use to access `UserDefaults`
 	///   - store: `UserDefaults` store to use
 	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == Double {
-		self.init(defaultValue: wrappedValue, key: key, store: store)
+		self.init(defaultValue: wrappedValue) {
+			store.double(forKey: key)
+		} setter: {
+			store.set($0, forKey: key)
+		}
 	}
 	/// Creates a new StoredValue property wrapper for a String value
 	/// - Parameters:
@@ -128,7 +141,11 @@ extension StoredValue {
 	///   - key: Key to use to access `UserDefaults`
 	///   - store: `UserDefaults` store to use
 	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == String {
-		self.init(defaultValue: wrappedValue, key: key, store: store)
+		self.init(defaultValue: wrappedValue) {
+			store.string(forKey: key)
+		} setter: {
+			store.set($0, forKey: key)
+		}
 	}
 	/// Creates a new StoredValue property wrapper for a URL value
 	/// - Parameters:
@@ -136,7 +153,11 @@ extension StoredValue {
 	///   - key: Key to use to access `UserDefaults`
 	///   - store: `UserDefaults` store to use
 	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == URL {
-		self.init(defaultValue: wrappedValue, key: key, store: store)
+		self.init(defaultValue: wrappedValue) {
+			store.url(forKey: key)
+		} setter: {
+			store.set($0, forKey: key)
+		}
 	}
 	/// Creates a new StoredValue property wrapper for a Data value
 	/// - Parameters:
@@ -144,7 +165,11 @@ extension StoredValue {
 	///   - key: Key to use to access `UserDefaults`
 	///   - store: `UserDefaults` store to use
 	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == Data {
-		self.init(defaultValue: wrappedValue, key: key, store: store)
+		self.init(defaultValue: wrappedValue) {
+			store.data(forKey: key)
+		} setter: {
+			store.set($0, forKey: key)
+		}
 	}
 }
 
@@ -158,7 +183,7 @@ extension StoredValue {
 		self.init(
 			defaultValue: wrappedValue,
 			getter: {
-				guard let array = store.object(forKey: key) as? [Element] else {
+				guard let array = store.array(forKey: key) as? [Element] else {
 					return nil
 				}
 				return Set(array)
@@ -237,7 +262,7 @@ extension StoredValue {
 		self.init(
 			defaultValue: nil,
 			getter: {
-				guard let array = store.object(forKey: key) as? [Element] else {
+				guard let array = store.array(forKey: key) as? [Element] else {
 					return nil
 				}
 				return Set(array)
