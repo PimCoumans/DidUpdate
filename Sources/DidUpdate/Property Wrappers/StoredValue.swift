@@ -174,6 +174,63 @@ extension StoredValue {
 }
 
 extension StoredValue {
+	/// Creates a new StoredValue property wrapper for a for a `RawRepresentable` value
+	/// - Parameters:
+	///   - wrappedValue: Default value when value not found in `UserDefaults`
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value: RawRepresentable {
+		self.init(
+			defaultValue: wrappedValue,
+			getter: {
+				guard let rawValue = store.object(forKey: key) as? Value.RawValue else {
+					return nil
+				}
+				return Value(rawValue: rawValue)
+			},
+			setter: { value in
+				store.set(value.rawValue, forKey: key)
+			}
+		)
+	}
+}
+
+fileprivate enum JSONCoders {
+	static let encoder = JSONEncoder()
+	static let decoder = JSONDecoder()
+}
+
+extension StoredValue {
+	/// Creates a new StoredValue property wrapper for a for a `Codable` value, using `JSONDecoder` and `JSONEncoder`
+	/// - Parameters:
+	///   - wrappedValue: Default value when value not found in `UserDefaults`
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value: Codable {
+		self.init(
+			defaultValue: wrappedValue,
+			getter: {
+				if let value = store.object(forKey: key) as? Value {
+					return value
+				} else if
+					let data = store.object(forKey: key) as? Data,
+					let decoded = try? JSONCoders.decoder.decode(Value.self, from: data)
+				{
+					return decoded
+				}
+				return nil
+			},
+			setter: { value in
+				guard let data = try? JSONEncoder().encode(value) else {
+					return
+				}
+				store.set(data, forKey: key)
+			}
+		)
+	}
+}
+
+extension StoredValue {
 	/// Creates a new StoredValue property wrapper for a Set value, storing the value as an Array in the user defaults store
 	/// - Parameters:
 	///   - wrappedValue: Default value when value not found in `UserDefaults`
