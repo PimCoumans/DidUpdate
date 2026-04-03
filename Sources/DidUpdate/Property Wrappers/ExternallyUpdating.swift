@@ -56,7 +56,7 @@ extension ExternallyUpdating {
 	public func addUpdateHandler(_ handler: UpdateHandler<Value>) -> Observer {
 		let localHandler = UpdateHandler(
 			updateWithCurrentValue: handler.updateWithCurrentValue,
-			shouldHandleUpdate: { _ in !storage.isUpdating },
+			shouldHandleUpdate: { (handler.shouldHandleUpdate?($0) ?? true) && !storage.isUpdating },
 			handler: { handler.handle(update: $0) }
 		)
 		return storage.proxy.addUpdateHandler(localHandler)
