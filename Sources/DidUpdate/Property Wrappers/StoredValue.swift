@@ -191,7 +191,7 @@ extension StoredValue {
 }
 
 extension StoredValue {
-	/// Creates a new StoredValue property wrapper for a Set value, storing the value as an Array in the user defaults store
+	/// Creates a new StoredValue property wrapper for a `Set` value, storing the value as an Array in the user defaults store
 	/// - Parameters:
 	///   - wrappedValue: Default value when value not found in `UserDefaults`
 	///   - key: Key to use to access `UserDefaults`
@@ -207,6 +207,27 @@ extension StoredValue {
 			},
 			setter: { value in
 				store.set(Array(value), forKey: key)
+			}
+		)
+	}
+
+	/// Creates a new StoredValue property wrapper for a `Set` with `RawRepresentable` values, storing the value as an
+	/// Array with its raw values in the user defaults store
+	/// - Parameters:
+	///   - wrappedValue: Default value when value not found in `UserDefaults`
+	///   - key: Key to use to access `UserDefaults`
+	///   - store: `UserDefaults` store to use
+	public init<Element>(wrappedValue: Value, _ key: String, store: UserDefaults = .standard) where Value == Set<Element>, Element:RawRepresentable {
+		self.init(
+			defaultValue: wrappedValue,
+			getter: {
+				guard let array = store.array(forKey: key) as? [Element.RawValue] else {
+					return nil
+				}
+				return Set(array.compactMap(Element.init(rawValue:)))
+			},
+			setter: { value in
+				store.set(value.map(\.rawValue), forKey: key)
 			}
 		)
 	}
